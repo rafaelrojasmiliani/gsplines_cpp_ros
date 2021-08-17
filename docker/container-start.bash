@@ -12,7 +12,7 @@ main(){
         --env="ROS_MASTER_IP" \
         --env="QT_X11_NO_MITSHM=1" \
         --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-        --volume $(pwd)/../:/catkinws/src/gsplines \
+        --volume $(pwd)/../:/catkinws/src/ \
         --user $(id -u):$(id -g) \
         "gsplines_cpp_ros" bash
 }
