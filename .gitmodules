@@ -1,0 +1,3 @@
+[submodule "submodules/gsplines_cpp"]
+	path = submodules/gsplines_cpp
+	url = https://github.com/rafaelrojasmiliani/gsplines_cpp.git
