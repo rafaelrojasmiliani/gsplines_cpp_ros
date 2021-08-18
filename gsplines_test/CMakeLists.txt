@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gsplines_test)
 
-find_package(catkin REQUIRED COMPONENTS genmsg roscpp rospy std_msgs gsplines)
+find_package(catkin REQUIRED COMPONENTS genmsg roscpp rospy std_msgs
+                                        gsplines_ros)
 
 find_package(Eigen3 REQUIRED)
 
@@ -10,8 +11,8 @@ catkin_package(
   # rospy std_msgs DEPENDS Eigen3
 )
 
-include_directories(
-  # include
-  ${catkin_INCLUDE_DIRS}
-  # TODO: Check names of system library include directories (Eigen3)
-  ${Eigen3_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS}
+                    /usr/include/eigen3/)
+
+add_executable(test_node src/test_node.cpp)
+target_link_libraries(test_node ${catkin_LIBRARIES})

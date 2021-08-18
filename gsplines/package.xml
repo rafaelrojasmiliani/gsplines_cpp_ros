@@ -1,13 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gsplines</name>
+  <name>gsplines_ros</name>
   <version>0.0.0</version>
   <description>The gsplines package</description>
-
   <maintainer email="rafaelrojasmiliani@gmail.com">Rafael Rojas Miliani</maintainer>
-
   <license>MIT</license>
-
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>Eigen3</build_depend>
   <build_depend>roscpp</build_depend>
@@ -18,9 +15,5 @@
   <exec_depend>Eigen3</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
-
-
-  <export>
-
-  </export>
+  <depend>gsplines_msgs</depend>
 </package>

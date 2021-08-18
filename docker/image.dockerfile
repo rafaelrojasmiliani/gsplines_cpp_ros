@@ -25,7 +25,8 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Dpkg::Options::="--force-confnew" \
                     ros-noetic-ifopt exuberant-ctags ros-noetic-pinocchio ros-noetic-ros-base python3-catkin-tools \
                     ros-noetic-plotjuggler \
-                    ros-noetic-joint-trajectory-controller
+                    ros-noetic-joint-trajectory-controller \
+                    ros-noetic-joint-trajectory-action
 
 COPY vim_installation.bash /
 RUN cd / && bash vim_installation.bash
