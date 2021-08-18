@@ -38,6 +38,8 @@ catkin_package(
   std_msgs
   trajectory_msgs)
 
-include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
+
+add_library(gsplines_follow_trajectory_control src/wrapper.cpp)
 
 install()
