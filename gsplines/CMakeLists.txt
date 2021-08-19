@@ -27,7 +27,7 @@ include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 target_link_libraries(gspline_ros ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 
 install(
-  TARGETS gsplines
+  TARGETS gsplines gspline_ros
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})

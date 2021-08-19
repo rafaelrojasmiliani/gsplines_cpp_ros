@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gsplines_follow_trajectory_control</name>
+  <name>gsplines_follow_trajectory</name>
   <version>0.0.0</version>
   <description>The gsplines_follow_trajectory_control package</description>
   <maintainer email="rafaelrojasmiliani@gmail.com">Rafael A. Rojas</maintainer>

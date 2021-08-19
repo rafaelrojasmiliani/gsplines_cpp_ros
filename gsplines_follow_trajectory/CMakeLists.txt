@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(gsplines_follow_trajectory_control)
+project(gsplines_follow_trajectory)
 
 find_package(
   catkin REQUIRED
@@ -40,6 +40,16 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 
-add_library(gsplines_follow_trajectory_control src/wrapper.cpp)
+add_library(gsplines_follow_joint_trajectory_action_wrapper
+            src/follow_joint_trajectory_action_wrapper.cpp)
 
-install()
+target_link_libraries(gsplines_follow_joint_trajectory_action_wrapper
+                      ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+
+install(
+  TARGETS gsplines_follow_joint_trajectory_action_wrapper
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/gsplines_follow_trajectory
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)

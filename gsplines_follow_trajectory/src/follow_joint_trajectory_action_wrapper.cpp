@@ -3,12 +3,27 @@
 namespace gsplines_follow_trajectory {
 
 FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
-    const std::string &_name)
-    : nh_(), nh_prv_("~"), name_(_name),
+    const std::string &_name, const std::string &_fjta_name)
+    : nh_(), nh_prv_("~"), name_(_name), fjta_name_(_fjta_name),
       action_server_(
-          nh_, name_,
+          nh_, _name,
           boost::bind(&FollowJointTrajectoryActionWrapper::action_callback,
                       this, _1),
-          false) {}
+          false),
+      action_client_(nh_, _name, true) {
 
-} // namespace gsplines_follow_trajectory_control
+  if (action_client_.waitForServer(ros::Duration(5.0))) {
+    action_server_.start();
+    feedback_subscriber_ = nh_.subscribe(
+        _fjta_name + "/follow_joint_trajectory/feedback", 10,
+        &FollowJointTrajectoryActionWrapper::feedback_repeater_method, this);
+  }
+}
+void FollowJointTrajectoryActionWrapper::action_callback(
+    const FollowJointGSplineGoalConstPtr &goal) {}
+
+void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
+    const FollowJointGSplineFeedbackConstPtr _msg) {
+  action_server_.publishFeedback(_msg);
+}
+} // namespace gsplines_follow_trajectory
