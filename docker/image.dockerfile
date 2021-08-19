@@ -28,6 +28,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-joint-trajectory-controller \
                     ros-noetic-joint-trajectory-action
 
+RUN mkdir -p /ur_ws/src
+RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /ur_ws/src/ur_description_minimal
+RUN bash -c 'source /opt/ros/noetic/setup.bash && cd /ur_ws && catkin config --install --install-space /opt/ros/noetic/ --extend /opt/ros/noetic/ && catkin build'
+
+
 COPY vim_installation.bash /
 RUN cd / && bash vim_installation.bash
 COPY configfiles/vimrc /etc/vim/
