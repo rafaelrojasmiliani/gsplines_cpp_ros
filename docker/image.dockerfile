@@ -26,7 +26,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-ifopt exuberant-ctags ros-noetic-pinocchio ros-noetic-ros-base python3-catkin-tools \
                     ros-noetic-plotjuggler \
                     ros-noetic-joint-trajectory-controller \
-                    ros-noetic-joint-trajectory-action
+                    ros-noetic-joint-trajectory-action \
+                    ros-noetic-xacro \
+                    ros-noetic-gazebo-ros \
+                    ros-noetic-gazebo-controls \
+                    ros-noetic-joint-state-controller \
+                    ros-noetic-joint-state-controller
 
 RUN mkdir -p /ur_ws/src
 RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /ur_ws/src/ur_description_minimal

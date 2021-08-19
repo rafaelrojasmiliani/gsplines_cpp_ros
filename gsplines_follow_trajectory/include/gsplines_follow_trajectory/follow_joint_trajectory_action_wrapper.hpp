@@ -3,6 +3,7 @@
 
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/server/simple_action_server.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <gsplines_follow_trajectory/FollowJointGSplineAction.h>
 #include <ros/ros.h>
 
@@ -13,7 +14,8 @@ private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_prv_;
   actionlib::SimpleActionServer<FollowJointGSplineAction> action_server_;
-  actionlib::SimpleActionClient<FollowJointGSplineAction> action_client_;
+  actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>
+      action_client_;
 
   FollowJointGSplineFeedback feedback_;
   FollowJointGSplineResult result_;
@@ -30,6 +32,10 @@ public:
   void action_callback(const FollowJointGSplineGoalConstPtr &goal);
 
   void feedback_repeater_method(const FollowJointGSplineFeedbackConstPtr _msg);
+
+  virtual void prehemption_action();
+  virtual void done_action();
+  virtual void active_action();
 };
 
 } // namespace gsplines_follow_trajectory

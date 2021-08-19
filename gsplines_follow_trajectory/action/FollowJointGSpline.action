@@ -1,5 +1,5 @@
 # The joint trajectory to follow
-gsplines_msgs/GSpline gspline
+gsplines_msgs/JointGSpline gspline
 
 # Tolerances for the trajectory.  If the measured joint values fall
 # outside the tolerances the trajectory goal is aborted.  Any

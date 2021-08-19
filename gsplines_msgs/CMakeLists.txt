@@ -12,7 +12,7 @@ find_package(
              trajectory_msgs
              message_generation)
 
-add_message_files(FILES GSpline.msg)
+add_message_files(FILES GSpline.msg JointGSpline.msg)
 
 generate_messages(DEPENDENCIES control_msgs geometry_msgs sensor_msgs std_msgs
                   trajectory_msgs)
