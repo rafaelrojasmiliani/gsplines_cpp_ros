@@ -4,11 +4,11 @@
 
 int main(int argc, char **argv) {
 
-  ros::init(argc, argv, "robot_state_publisher");
+  ros::init(argc, argv, "wrapper");
   ros::NodeHandle node;
 
   gsplines_follow_trajectory::FollowJointTrajectoryActionWrapper wrapper(
-      "gspline_grapper", "pos_joint_traj_controller/");
+      "gspline_grapper", "pos_joint_traj_controller");
 
   ros::spin();
 

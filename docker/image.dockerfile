@@ -29,9 +29,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-joint-trajectory-action \
                     ros-noetic-xacro \
                     ros-noetic-gazebo-ros \
-                    ros-noetic-gazebo-controls \
+                    ros-noetic-gazebo-ros-control \
                     ros-noetic-joint-state-controller \
-                    ros-noetic-joint-state-controller
+                    ros-noetic-position-controllers \
+                    ros-noetic-robot-state-publisher \
+                    ros-noetic-joint-state-publisher \
+                    ros-noetic-rqt \
+                    ros-noetic-rqt-graph
 
 RUN mkdir -p /ur_ws/src
 RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /ur_ws/src/ur_description_minimal

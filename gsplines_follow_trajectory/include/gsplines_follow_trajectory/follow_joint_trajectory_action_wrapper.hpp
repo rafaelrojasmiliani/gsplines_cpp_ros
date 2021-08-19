@@ -34,9 +34,8 @@ public:
   void feedback_repeater_method(const FollowJointGSplineFeedbackConstPtr _msg);
   virtual void prehemption_action();
   virtual void done_action();
-  /*
-    virtual void active_action();
-    */
+  virtual void active_action();
+  virtual void feedback_action();
 };
 
 } // namespace gsplines_follow_trajectory

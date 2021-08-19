@@ -12,16 +12,13 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
           boost::bind(&FollowJointTrajectoryActionWrapper::action_callback,
                       this, _1),
           false),
-      action_client_(nh_, _name, true) {
+      action_client_(nh_, _fjta_name + "/follow_joint_trajectory", true) {
 
   action_server_.registerPreemptCallback(boost::bind(
       &FollowJointTrajectoryActionWrapper::prehemption_action, this));
 
   if (action_client_.waitForServer(ros::Duration(5.0))) {
     action_server_.start();
-    feedback_subscriber_ = nh_.subscribe(
-        _fjta_name + "/follow_joint_trajectory/feedback", 10,
-        &FollowJointTrajectoryActionWrapper::feedback_repeater_method, this);
   }
 }
 void FollowJointTrajectoryActionWrapper::action_callback(
@@ -36,10 +33,9 @@ void FollowJointTrajectoryActionWrapper::action_callback(
   goal_to_forward.trajectory =
       gsplines_ros::joint_gspline_msg_to_joint_trajectory_msgs(
           goal->gspline, ros::Duration(3.0));
-  /*
-    action_client_.sendGoal(
-        goal_to_forward,
-        boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this));*/
+  action_client_.sendGoal(
+      goal_to_forward,
+      boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this));
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
@@ -48,7 +44,7 @@ void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
 }
 
 void FollowJointTrajectoryActionWrapper::prehemption_action() {}
-/*
 void FollowJointTrajectoryActionWrapper::done_action() {}
-*/
+void FollowJointTrajectoryActionWrapper::active_action() {}
+void FollowJointTrajectoryActionWrapper::feedback_action() {}
 } // namespace gsplines_follow_trajectory

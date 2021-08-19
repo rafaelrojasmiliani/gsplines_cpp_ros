@@ -7,9 +7,12 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy gsplines_msgs)
 
 find_package(Eigen3 REQUIRED)
 
+# catkin_python_setup()
+
 catkin_package(
   INCLUDE_DIRS
-  ${PROJECT_SOURCE_DIR}/submodules/gsplines_cpp/include
+  ${PROJECT_SOURCE_DIR}/submodules/gsplines_cpp/include/
+  include/
   LIBRARIES
   gsplines
   gsplines_ros
@@ -28,6 +31,8 @@ include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 target_link_libraries(gsplines_ros ${catkin_LIBRARIES} ${Eigen3_LIBRARIES}
                       gsplines)
 
+install(TARGETS pygsplines
+        LIBRARY DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 install(
   TARGETS gsplines gsplines_ros
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
