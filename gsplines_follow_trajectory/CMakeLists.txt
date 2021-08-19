@@ -40,16 +40,27 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 
-add_library(gsplines_follow_joint_trajectory_action_wrapper
+add_library(gsplines_follow_trajectory
             src/follow_joint_trajectory_action_wrapper.cpp)
 
-target_link_libraries(gsplines_follow_joint_trajectory_action_wrapper
-                      ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+target_link_libraries(gsplines_follow_trajectory ${catkin_LIBRARIES}
+                      ${Eigen3_LIBRARIES})
+
+add_executable(follow_joint_trajectory_wrapper
+               src/follow_joint_trajectory_action_wrapper_node.cpp)
+
+target_link_libraries(follow_joint_trajectory_wrapper ${catkin_LIBRARIES}
+                      ${Eigen3_LIBRARIES} gsplines_follow_trajectory)
 
 install(
-  TARGETS gsplines_follow_joint_trajectory_action_wrapper
+  TARGETS gsplines_follow_trajectory
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
+# Install executable
+install(TARGETS follow_joint_trajectory_wrapper
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/gsplines_follow_trajectory
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)

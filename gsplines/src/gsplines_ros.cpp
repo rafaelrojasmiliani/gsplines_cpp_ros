@@ -112,7 +112,8 @@ trajectory_msgs::JointTrajectory gspline_msg_to_joint_trajectory_msgs(
 }
 
 trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msgs(
-    const gsplines_msgs::JointGSpline _trj, const ros::Duration &_rate) {
+    const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_rate) {
+
   gsplines::GSpline trj = msg_to_gspline(_trj.gspline);
   return gspline_to_joint_trajectory_msgs(trj, _trj.name, _rate);
 }
@@ -131,8 +132,8 @@ control_msgs::FollowJointTrajectoryGoal gspline_to_follow_joint_trajectory_goal(
 
 control_msgs::FollowJointTrajectoryGoal
 gspline_msgs_to_follow_joint_trajectory_goal(
-    const gsplines_msgs::JointGSpline _trj,
-    const std::vector<std::string> _joint_names, const ros::Duration &_rate) {
+    const gsplines_msgs::JointGSpline &_trj,
+    const std::vector<std::string> &_joint_names, const ros::Duration &_rate) {
 
   gsplines::GSpline trj = msg_to_gspline(_trj.gspline);
 

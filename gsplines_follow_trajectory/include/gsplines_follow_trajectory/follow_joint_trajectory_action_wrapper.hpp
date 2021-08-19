@@ -28,14 +28,15 @@ private:
 public:
   FollowJointTrajectoryActionWrapper(const std::string &_name,
                                      const std::string &_fjta_name);
-  virtual ~FollowJointTrajectoryActionWrapper() = default;
+  virtual ~FollowJointTrajectoryActionWrapper(){};
   void action_callback(const FollowJointGSplineGoalConstPtr &goal);
 
   void feedback_repeater_method(const FollowJointGSplineFeedbackConstPtr _msg);
-
   virtual void prehemption_action();
   virtual void done_action();
-  virtual void active_action();
+  /*
+    virtual void active_action();
+    */
 };
 
 } // namespace gsplines_follow_trajectory

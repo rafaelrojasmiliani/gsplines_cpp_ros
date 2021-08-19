@@ -36,15 +36,19 @@ void FollowJointTrajectoryActionWrapper::action_callback(
   goal_to_forward.trajectory =
       gsplines_ros::joint_gspline_msg_to_joint_trajectory_msgs(
           goal->gspline, ros::Duration(3.0));
-
   /*
-  action_client_.sendGoal(
-      goal_to_forward,
-      boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this));*/
+    action_client_.sendGoal(
+        goal_to_forward,
+        boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this));*/
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
     const FollowJointGSplineFeedbackConstPtr _msg) {
   action_server_.publishFeedback(_msg);
 }
+
+void FollowJointTrajectoryActionWrapper::prehemption_action() {}
+/*
+void FollowJointTrajectoryActionWrapper::done_action() {}
+*/
 } // namespace gsplines_follow_trajectory
