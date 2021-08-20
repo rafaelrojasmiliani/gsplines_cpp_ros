@@ -31,7 +31,13 @@ include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 target_link_libraries(gsplines_ros ${catkin_LIBRARIES} ${Eigen3_LIBRARIES}
                       gsplines)
 
-install(TARGETS pygsplines
+pybind11_add_module(pygsplines_ros ${PROJECT_SOURCE_DIR}/bindings/bindings.cpp)
+target_link_libraries(pygsplines_ros PUBLIC ${catkin_LIBRARIES}
+                                            ${Eigen3_LIBRARIES} gsplines)
+
+set_target_properties(pygsplines_ros PROPERTIES OUTPUT_NAME gsplines_ros)
+
+install(TARGETS pygsplines pygsplines_ros
         LIBRARY DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 install(
   TARGETS gsplines gsplines_ros
