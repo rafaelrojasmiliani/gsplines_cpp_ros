@@ -19,11 +19,6 @@ find_package(
 
 find_package(Eigen3 REQUIRED)
 
-add_action_files(DIRECTORY action FILES FollowJointGSpline.action)
-
-generate_messages(DEPENDENCIES actionlib_msgs std_msgs trajectory_msgs
-                  sensor_msgs gsplines_msgs)
-
 catkin_package(
   CATKIN_DEPENDS
   actionlib

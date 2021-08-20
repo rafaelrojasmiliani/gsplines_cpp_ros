@@ -12,10 +12,17 @@ find_package(
              trajectory_msgs
              message_generation)
 
-add_message_files(FILES GSpline.msg JointGSpline.msg)
+add_message_files(DIRECTORY msg FILES GSpline.msg JointGSpline.msg)
+add_action_files(DIRECTORY action FILES FollowJointGSpline.action)
 
-generate_messages(DEPENDENCIES control_msgs geometry_msgs sensor_msgs std_msgs
-                  trajectory_msgs)
+generate_messages(
+  DEPENDENCIES
+  control_msgs
+  geometry_msgs
+  sensor_msgs
+  std_msgs
+  trajectory_msgs
+  actionlib_msgs)
 
 catkin_package(CATKIN_DEPENDS control_msgs geometry_msgs sensor_msgs std_msgs
                trajectory_msgs)

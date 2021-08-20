@@ -22,7 +22,7 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
   }
 }
 void FollowJointTrajectoryActionWrapper::action_callback(
-    const FollowJointGSplineGoalConstPtr &goal) {
+    const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal) {
 
   control_msgs::FollowJointTrajectoryGoal goal_to_forward;
 
@@ -39,7 +39,7 @@ void FollowJointTrajectoryActionWrapper::action_callback(
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
-    const FollowJointGSplineFeedbackConstPtr _msg) {
+    const gsplines_msgs::FollowJointGSplineFeedbackConstPtr _msg) {
   action_server_.publishFeedback(_msg);
 }
 
