@@ -14,6 +14,8 @@ find_package(
 
 add_message_files(DIRECTORY msg FILES GSpline.msg JointGSpline.msg)
 add_action_files(DIRECTORY action FILES FollowJointGSpline.action)
+add_service_files(DIRECTORY srv FILES JointGSplineTrigger.srv
+                  GSplineTrigger.srv)
 
 generate_messages(
   DEPENDENCIES

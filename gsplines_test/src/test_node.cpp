@@ -4,7 +4,8 @@
 #include <gsplines/ipopt_solver.hpp>
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "talker");
+
+  ros::init(argc, argv, "my_node_name", ros::init_options::AnonymousName);
 
   ros::NodeHandle n;
 

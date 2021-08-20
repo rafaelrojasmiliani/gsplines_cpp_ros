@@ -1,0 +1,44 @@
+#! /usr/bin/env python
+"""
+    This is a generator of minimum jerk paths
+"""
+import rospy
+from trajectory_msgs.msg import JointTrajectory
+from gsplines import minimum_jerk_path
+from gsplines_ros import gspline_to_msg, gspline_to_joint_trajectory_msg
+from gsplines_msgs.msg import GSpline
+import numpy as np
+
+
+def main():
+    rospy.init_node('random_minimum_jerk_path_generator', anonymous=True)
+
+    rate = rospy.Rate(2)
+
+    codom_dim = 7
+
+    number_of_waypoints = 8
+
+    step = rospy.Duration(0.01)
+
+    pub_gsplines = rospy.Publisher(
+        'random_minium_jerk_gspline', GSpline, queue_size=10)
+
+    pub_trj = rospy.Publisher(
+        'random_minium_jerk_trajectory', JointTrajectory, queue_size=10)
+
+    while not rospy.is_shutdown():
+
+        waypoints = np.random.rand(number_of_waypoints, codom_dim)
+
+        trj = minimum_jerk_path(waypoints)
+
+        pub_gsplines.publish(gspline_to_msg(trj))
+        pub_gsplines.publish(
+            gspline_to_joint_trajectory_msg(trj, step))
+
+        rate.sleep()
+
+
+if __name__ == "__main__":
+    main()

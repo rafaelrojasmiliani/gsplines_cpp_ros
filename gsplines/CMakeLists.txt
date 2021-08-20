@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy gsplines_msgs)
 
 find_package(Eigen3 REQUIRED)
 
-# catkin_python_setup()
+catkin_python_setup()
 
 catkin_package(
   INCLUDE_DIRS
@@ -31,13 +31,7 @@ include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} include/)
 target_link_libraries(gsplines_ros ${catkin_LIBRARIES} ${Eigen3_LIBRARIES}
                       gsplines)
 
-pybind11_add_module(pygsplines_ros ${PROJECT_SOURCE_DIR}/bindings/bindings.cpp)
-target_link_libraries(pygsplines_ros PUBLIC ${catkin_LIBRARIES}
-                                            ${Eigen3_LIBRARIES} gsplines)
-
-set_target_properties(pygsplines_ros PROPERTIES OUTPUT_NAME gsplines_ros)
-
-install(TARGETS pygsplines pygsplines_ros
+install(TARGETS pygsplines
         LIBRARY DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
 install(
   TARGETS gsplines gsplines_ros
@@ -48,3 +42,6 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/submodules/gsplines_cpp/include/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/gsplines_ros
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)
+
+catkin_install_python(PROGRAMS scripts/random_minimum_jerk_path_generator
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
