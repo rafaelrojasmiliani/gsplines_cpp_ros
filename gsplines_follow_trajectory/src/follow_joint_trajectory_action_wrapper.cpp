@@ -32,7 +32,7 @@ void FollowJointTrajectoryActionWrapper::action_callback(
 
   goal_to_forward.trajectory =
       gsplines_ros::joint_gspline_msg_to_joint_trajectory_msgs(
-          goal->gspline, ros::Duration(3.0));
+          goal->gspline, ros::Duration(0.01));
   action_client_.sendGoal(
       goal_to_forward,
       boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this));

@@ -40,7 +40,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-rqt-gui \
                     ros-noetic-rqt-gui-py \
                     ros-noetic-rqt-py-common \
-                    ros-noetic-moveit-msgs
+                    ros-noetic-moveit-msgs \
+                    ros-noetic-rqt-joint-trajectory-controller
 
 
 
