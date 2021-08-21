@@ -27,7 +27,7 @@ gsplines::GSpline msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
 gsplines_msgs::GSpline gspline_to_msg(const gsplines::GSpline &_gspline) {
   gsplines_msgs::GSpline result;
 
-  result.basis = _gspline.get_basis().get_name();
+  result.basis = _gspline.get_basis_name();
 
   result.domain_left_boundary = _gspline.get_domain().first;
   result.domain_right_boundary = _gspline.get_domain().second;

@@ -17,7 +17,9 @@ def main():
 
     codom_dim = 7
 
-    number_of_waypoints = 8
+    joint_names = ["joint_{:d}".format(i) for i in range(7)]
+
+    number_of_waypoints = 3
 
     step = rospy.Duration(0.01)
 
@@ -34,8 +36,8 @@ def main():
         trj = minimum_jerk_path(waypoints)
 
         pub_gsplines.publish(gspline_to_msg(trj))
-        pub_gsplines.publish(
-            gspline_to_joint_trajectory_msg(trj, step))
+        pub_trj.publish(
+            gspline_to_joint_trajectory_msg(trj, joint_names, step))
 
         rate.sleep()
 

@@ -41,7 +41,7 @@ def msg_to_gspline(_msg: GSpline):
 def gspline_to_msg(_gspline: gsplines.GSpline):
     result = GSpline()
 
-    result.basis = _gspline.get_basis().get_name()
+    result.basis = _gspline.get_basis_name()
 
     result.domain_left_boundary = _gspline.get_domain()[0]
     result.domain_right_boundary = _gspline.get_domain()[1]
@@ -81,10 +81,10 @@ def gspline_to_joint_trajectory_msg(_gspline, _joint_names,
 
     time_0, time_1 = _gspline.get_domain()
 
-    time_spam = np.arange(time_0, time_1+_step, _step)
+    time_spam = np.arange(time_0, time_1+_step.to_sec(), _step.to_sec())
 
     gspline_diff_1 = _gspline.deriv()
-    gspline_diff_2 = gspline_diff_1.deriv()
+    gspline_diff_2 = _gspline.deriv(2)
 
     gspline_evaluated = _gspline(time_spam)
     gspline_diff_1_evaluated = gspline_diff_1(time_spam)
