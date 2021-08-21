@@ -35,11 +35,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-robot-state-publisher \
                     ros-noetic-joint-state-publisher \
                     ros-noetic-rqt \
-                    ros-noetic-rqt-graph
+                    ros-noetic-rqt-graph \
+                    ros-noetic-roslint \
+                    ros-noetic-rqt-gui \
+                    ros-noetic-rqt-gui-py \
+                    ros-noetic-rqt-py-common \
+                    ros-noetic-moveit-msgs
 
-RUN mkdir -p /ur_ws/src
-RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /ur_ws/src/ur_description_minimal
-RUN bash -c 'source /opt/ros/noetic/setup.bash && cd /ur_ws && catkin config --install --install-space /opt/ros/noetic/ --extend /opt/ros/noetic/ && catkin build'
+
+
+RUN mkdir -p /aux_ws/src
+RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /aux_ws/src/ur_description_minimal
+RUN git clone https://github.com/tork-a/rqt_joint_trajectory_plot.git /aux_ws/src/rqt_joint_trajectory_plot
+RUN bash -c 'source /opt/ros/noetic/setup.bash && cd /aux_ws && catkin config --install --install-space /opt/ros/noetic/ --extend /opt/ros/noetic/ && catkin build'
 
 
 COPY vim_installation.bash /

@@ -2,42 +2,44 @@
 """
     This is a generator of minimum jerk paths
 """
-import rospy
-from trajectory_msgs.msg import JointTrajectory
-from gsplines import minimum_jerk_path
-from gsplines_ros import gspline_to_msg, gspline_to_joint_trajectory_msg
-from gsplines_msgs.msg import GSpline
 import numpy as np
+from gsplines_msgs.msg import JointGSpline
+import rospy
+from gsplines import minimum_jerk_path
+from gsplines_ros import gspline_to_joint_gspline_msg
 
 
 def main():
+    """
+    Generic publisher loop
+    """
     rospy.init_node('random_minimum_jerk_path_generator', anonymous=True)
 
-    rate = rospy.Rate(2)
+    params = {}
+    params['rate'] = 0.5
+    params['codom_dim'] = 6
+    params['joint_names'] = ["joint_{:d}".format(
+        i) for i in range(params['codom_dim'])]
+    params['number_of_waypoints'] = 3
+    params['output_topic'] = 'random_minium_jerk_gspline'
 
-    codom_dim = 7
-
-    joint_names = ["joint_{:d}".format(i) for i in range(7)]
-
-    number_of_waypoints = 3
-
-    step = rospy.Duration(0.01)
+    for key, value in params.items():
+        params[key] = rospy.get_param('~'+key, value)
 
     pub_gsplines = rospy.Publisher(
-        'random_minium_jerk_gspline', GSpline, queue_size=10)
+        params['output_topic'], JointGSpline, queue_size=10)
 
-    pub_trj = rospy.Publisher(
-        'random_minium_jerk_trajectory', JointTrajectory, queue_size=10)
+    rate = rospy.Rate(params['rate'])
 
     while not rospy.is_shutdown():
 
-        waypoints = np.random.rand(number_of_waypoints, codom_dim)
+        waypoints = np.random.rand(
+            params['number_of_waypoints'], params['codom_dim'])
 
         trj = minimum_jerk_path(waypoints)
 
-        pub_gsplines.publish(gspline_to_msg(trj))
-        pub_trj.publish(
-            gspline_to_joint_trajectory_msg(trj, joint_names, step))
+        pub_gsplines.publish(
+            gspline_to_joint_gspline_msg(trj, params['joint_names']))
 
         rate.sleep()
 

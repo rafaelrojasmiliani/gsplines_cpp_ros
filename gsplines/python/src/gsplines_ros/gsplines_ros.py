@@ -20,7 +20,7 @@ from gsplines_msgs.msg import GSpline, JointGSpline
 import numpy as np
 
 
-def msg_to_gspline(_msg: GSpline):
+def gspline_msg_to_gspline(_msg: GSpline):
 
     basis = string_to_basis(_msg.basis)
 
@@ -33,6 +33,25 @@ def msg_to_gspline(_msg: GSpline):
     coefficients = _msg.coefficients
 
     interval_lengths = _msg.interval_lengths
+
+    return gsplines.GSpline(domain, codom_dim, number_of_intervals,
+                            basis, coefficients, interval_lengths)
+
+
+def joint_gspline_msg_to_gspline(_msg: JointGSpline):
+
+    basis = string_to_basis(_msg.gspline.basis)
+
+    domain = (_msg.gspline.domain_left_boundary,
+              _msg.gspline.domain_right_boundary)
+
+    codom_dim = _msg.gspline.codom_dim
+
+    number_of_intervals = _msg.gspline.number_of_intervals
+
+    coefficients = _msg.gspline.coefficients
+
+    interval_lengths = _msg.gspline.interval_lengths
 
     return gsplines.GSpline(domain, codom_dim, number_of_intervals,
                             basis, coefficients, interval_lengths)
@@ -101,16 +120,17 @@ def gspline_to_joint_trajectory_msg(_gspline, _joint_names,
     header = Header()
     header.stamp = rospy.Time()
     result.header = header
+    result.joint_names = _joint_names
     return result
 
 
 def gspline_msg_to_joint_trajectory_msg(_gspline_msg, _joint_names, _step):
-    gspline = msg_to_gspline(_gspline_msg)
+    gspline = gspline_msg_to_gspline(_gspline_msg)
     return gspline_to_joint_trajectory_msg(gspline, _joint_names, _step)
 
 
-def joint_gspline_msg_to_joint_trajectory_msgs(_joint_gspline_msg:
-                                               JointGSpline, _step):
+def joint_gspline_msg_to_joint_trajectory_msg(_joint_gspline_msg:
+                                              JointGSpline, _step):
 
     return gspline_msg_to_joint_trajectory_msg(_joint_gspline_msg.gspline,
                                                _joint_gspline_msg.name, _step)
@@ -130,14 +150,14 @@ def gspline_to_follow_joint_trajectory_goal(_gspline, _joint_names,
 def gspline_msg_to_follow_joint_trajectory_goal(_gspline_msg,
                                                 _joint_names, _step):
 
-    trj = msg_to_gspline(_gspline_msg)
+    trj = gspline_msg_to_gspline(_gspline_msg)
     return gspline_msg_to_follow_joint_trajectory_goal(trj,
                                                        _joint_names, _step)
 
 
 def joint_gspline_msgs_to_follow_joint_trajectory_goal(_joint_gspline_msg,
                                                        _step):
-    trj = msg_to_gspline(_joint_gspline_msg.gspline)
+    trj = gspline_msg_to_gspline(_joint_gspline_msg.gspline)
     return gspline_msg_to_follow_joint_trajectory_goal(trj,
                                                        _joint_gspline_msg.name,
                                                        _step)

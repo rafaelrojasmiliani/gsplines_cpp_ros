@@ -1,0 +1,109 @@
+#! /usr/bin/env python
+"""
+    Listest to gsplines and plot them
+"""
+from gsplines_msgs.msg import JointGSpline
+import rospy
+from trajectory_msgs.msg import JointTrajectory
+from gsplines_ros import joint_gspline_msg_to_gspline
+from matplotlib import pyplot as plt
+import numpy as np
+import matplotlib
+
+
+def mypause(interval):
+    """ Workarround to prevent the plot window to steal the desktop focus
+    https://stackoverflow.com/questions/45729092/make-interactive-matplotlib-window-not-pop-to-front-on-each-update-windows-7/45734500#45734500
+    """
+    backend = plt.rcParams['backend']
+    if backend in matplotlib.rcsetup.interactive_bk:
+        figure_manager = matplotlib._pylab_helpers.Gcf.get_active()
+        if figure_manager is not None:
+            canvas = figure_manager.canvas
+            if canvas.figure.stale:
+                canvas.draw()
+            canvas.start_event_loop(interval)
+            return
+
+
+def show_piecewisefunction(_figure, _gspline, _up_to_deriv=3,
+                           _dt=0.1, _title='', _names: list = None):
+    """
+        plot piecewise function
+    """
+    if _names is None:
+        _names = ['cordinate {:d}'.format(i+1)
+                  for i in range(_gspline.get_codom_dim())]
+    else:
+        assert len(_names) == _gspline.get_codom_dim()
+    dim = _gspline.get_codom_dim()
+    gridspec = _figure.add_gridspec(_up_to_deriv + 1, dim)
+    plot_axes = np.array(
+        [[_figure.add_subplot(gridspec[i, j]) for j in range(dim)]
+         for i in range(_up_to_deriv + 1)])
+
+    if dim == 1:
+        plot_axes = np.array([[plot_axes[i]] for i in range(_up_to_deriv + 1)])
+    _figure.suptitle(_title)
+    time_spam = np.arange(0.0, _gspline.get_exec_time()+_dt, _dt)
+
+    for i in range(0, _up_to_deriv + 1):
+        current_trj = _gspline.deriv(i)
+        current_trj_evaluated = current_trj(time_spam)
+        for j in range(0, dim):
+            plot_axes[i, j].plot(time_spam, current_trj_evaluated[:, j])
+            plot_axes[i, j].grid()
+            if i == 0:
+                plot_axes[i, j].set_title(
+                    '{:s} derivative {:d}'.format(_names[j], i), fontsize=8)
+
+            if hasattr(_gspline, 'get_domain_breakpoints'):
+                for breack_point in _gspline.get_domain_breakpoints():
+                    plot_axes[i, j].axvline(
+                        breack_point, alpha=0.1, color='red')
+
+    plt.subplots_adjust(
+        left=0.025,
+        bottom=0.05,
+        right=0.975,
+        top=0.95,
+        wspace=0.25,
+        hspace=0.15)
+
+
+class Node:
+    """ Generic node class"""
+
+    def __init__(self):
+        rospy.init_node('gspline_to_joint_trajectory', anonymous=True)
+        self.params = {}
+        self.params['input_topic'] = "input_gspline"
+        self.params['plot_up_to_derivative'] = 3
+        self.params['plot_step'] = 0.1
+        self.params['title'] = "gspline plot"
+        matplotlib.use("Qt5agg")
+
+        for key, value in self.params.items():
+            self.params[key] = rospy.get_param('~'+key, value)
+
+        self.subs_ = rospy.Subscriber(
+            self.params['input_topic'], JointGSpline, self.callback)
+
+        self.figure_ = plt.figure()
+        plt.show()
+
+    def callback(self, _msg: JointGSpline):
+        """ plot received message"""
+        trj = joint_gspline_msg_to_gspline(_msg)
+
+        plt.clf()
+
+        show_piecewisefunction(self.figure_, trj,
+                               self.params['plot_up_to_derivative'],
+                               self.params['plot_step'],
+                               self.params['title'], _msg.name)
+        mypause(0.001)
+
+
+if __name__ == "__main__":
+    tr = Node()

@@ -38,6 +38,7 @@ install_vim_plugins(){
     cd /etc/vim/bundle/vimspector && python3 install_gadget.py --enable-c --enable-cpp #--enable-python
     git clone https://github.com/lfv89/vim-interestingwords.git /etc/vim/bundle/vim-interestingwords
     git clone https://github.com/kkoomen/vim-doge.git /etc/vim/bundle/vim-doge
+    git clone https://github.com/rafaelrojasmiliani/vim_snippets_ros.git /etc/vim/bundle/vim-snippets-ros
 }
 
 main(){

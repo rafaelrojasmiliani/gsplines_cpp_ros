@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="random_gsplines" pkg="gsplines_ros" type="random_minimum_jerk_path_generator" respawn="false" output="screen">
+    <param name="codom_dim" value="3"/>
+    <param name="rate" value="0.25"/>
+    <rosparam param="joint_names">["joint_1", "joint_2", "joint_3"]</rosparam>
+    <param name="number_of_waypoints" value="4"/>
+    <param name="output_topic" value="gsplines"/>
+  </node>
+  <node name="tranlator" pkg="gsplines_ros" type="gspline_to_joint_trajectory" respawn="false" output="screen">
+    <param name="input_topic" value="gsplines"/>
+    <param name="output_topic" value="joint_trajectory"/>
+  </node>
+  <node name="plotter" pkg="gsplines_ros" type="gspline_plotter" respawn="false" output="screen">
+    <param name="input_topic" value="gsplines"/>
+    <param name="plot_up_to_derivative" value="5"/>
+    <param name="plot_step" value="0.001"/>
+    <param name="title" value="Test Gspline"/>
+  </node>
+</launch>

@@ -67,6 +67,8 @@ call vundle#begin('/etc/vim/bundle/')
         let g:UltiSnipsJumpForwardTrigger = "<c-n>"
         let g:UltiSnipsJumpBackwardTrigger = "<c-p>"
     Plugin 'vim-snippets'
+    Plugin 'vim-snippets-ros'
+        let g:UltiSnipsJumpForwardTrigger="<c-j>"
     Plugin 'vim-fugitive'
     Plugin 'xmledit'
     Plugin 'vimspector'

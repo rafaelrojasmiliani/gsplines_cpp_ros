@@ -43,5 +43,10 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/submodules/gsplines_cpp/include/
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/gsplines_ros
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)
 
-catkin_install_python(PROGRAMS scripts/random_minimum_jerk_path_generator
-                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY launch/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+catkin_install_python(
+  PROGRAMS scripts/random_minimum_jerk_path_generator scripts/gspline_plotter
+  scripts/gspline_to_joint_trajectory DESTINATION
+  ${CATKIN_PACKAGE_BIN_DESTINATION})

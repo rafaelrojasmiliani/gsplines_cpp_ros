@@ -1,0 +1,42 @@
+#! /usr/bin/env python
+"""
+    This is a generator of minimum jerk paths
+"""
+from gsplines_msgs.msg import JointGSpline
+import rospy
+from trajectory_msgs.msg import JointTrajectory
+from gsplines_ros import joint_gspline_msg_to_joint_trajectory_msg
+
+
+class Translator:
+
+    def __init__(self):
+        rospy.init_node('gspline_to_joint_trajectory', anonymous=True)
+        self.params = {}
+        self.params['input_topic'] = "input_gspline"
+        self.params['output_topic'] = "output_joint_trajectory"
+        self.params['trajectory_step'] = 0.01
+
+        for key, value in self.params.items():
+            self.params[key] = rospy.get_param('~'+key, value)
+
+        self.params['trajectory_step'] = rospy.Duration(
+            self.params['trajectory_step'])
+
+        self.pub_ = rospy.Publisher(self.params['output_topic'],
+                                    JointTrajectory, queue_size=10)
+        self.subs_ = rospy.Subscriber(
+            self.params['input_topic'], JointGSpline, self.callback)
+
+    def callback(self, _msg: JointGSpline):
+        trj = joint_gspline_msg_to_joint_trajectory_msg(
+            _msg, self.params['trajectory_step'])
+        self.pub_.publish(trj)
+
+    def spin(self):
+        rospy.spin()
+
+
+if __name__ == "__main__":
+    tr = Translator()
+    tr.spin()
