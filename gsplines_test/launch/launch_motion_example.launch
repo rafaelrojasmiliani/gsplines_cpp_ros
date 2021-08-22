@@ -5,8 +5,7 @@
     <param name="control_step" value="0.01"/>
     <param name="number_of_waypoints" value="5"/>
     <param name="waypoint_radius" value="0.1"/>
-    <param name="execution_time" value="1.5"/>
+    <param name="execution_time" value="4.5"/>
     <param name="action_ns" value="pos_joint_traj_controller"/>
-    <rosparam param="initial_position">[0.0, -1.5, -0.75, 0.0, 0.0, 0.0]</rosparam>
   </node>
 </launch>

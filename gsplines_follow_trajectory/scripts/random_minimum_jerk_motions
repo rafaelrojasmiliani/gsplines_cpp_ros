@@ -10,7 +10,7 @@ from gsplines import minimum_jerk_path
 from gsplines_ros import gspline_to_follow_joint_trajectory_goal
 from sensor_msgs.msg import JointState
 import actionlib
-import actionlib_msgs
+from actionlib_msgs.msg import GoalStatus
 
 
 def main():
@@ -68,11 +68,6 @@ def main():
             first_motion, joint_names, rospy.Duration(0.01))
         goal_state = motion_action.send_goal_and_wait(first_goal)
         initial_position = desired_initial_position
-        print('----------------------------')
-        print('----------------------------')
-        print(goal_state)
-        print('----------------------------')
-        print('----------------------------')
         rate.sleep()
 
     while not rospy.is_shutdown():
@@ -88,11 +83,16 @@ def main():
         waypoints[-1, :] = initial_position
 
         trj = minimum_jerk_path(waypoints)
+        trj = trj.linear_scaling_new_execution_time(params['execution_time'])
 
         goal = gspline_to_follow_joint_trajectory_goal(
             trj, joint_names, rospy.Duration(0.01))
 
-        motion_action.send_goal_and_wait(goal)
+        goal_state = motion_action.send_goal_and_wait(goal)
+
+        if(goal_state != GoalStatus.SUCCEEDED):
+            rospy.logerr(motion_action.get_goal_status_text())
+            return
 
         rate.sleep()
 
