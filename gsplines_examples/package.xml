@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gsplines_test</name>
+  <name>gsplines_examples</name>
   <version>0.0.0</version>
-  <description>The gsplines_test package</description>
-  <maintainer email="fraunhoferlab@todo.todo">fraunhoferlab</maintainer>
+  <description>The gsplines_examples package</description>
+  <maintainer email="rafaelrojasmiliani@gmail.com">Rafael A. Rojas</maintainer>
   <license>TODO</license>
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>genmsg</buildtool_depend>

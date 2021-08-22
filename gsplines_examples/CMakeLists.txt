@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(gsplines_test)
+project(gsplines_examples)
 
 find_package(catkin REQUIRED COMPONENTS genmsg roscpp rospy std_msgs
                                         gsplines_ros gsplines_follow_trajectory)
@@ -7,8 +7,8 @@ find_package(catkin REQUIRED COMPONENTS genmsg roscpp rospy std_msgs
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  # INCLUDE_DIRS include LIBRARIES gsplines_test CATKIN_DEPENDS genmsg roscpp
-  # rospy std_msgs DEPENDS Eigen3
+  # INCLUDE_DIRS include LIBRARIES gsplines_examples CATKIN_DEPENDS genmsg
+  # roscpp rospy std_msgs DEPENDS Eigen3
 )
 
 include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS}
