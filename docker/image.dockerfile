@@ -17,6 +17,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     libgfortran-7-dev cmake libgsl-dev gdb python3-tk libeigen3-dev \
                     libboost-math-dev
 
+COPY vim_installation.bash /
+RUN cd / && bash vim_installation.bash
+COPY configfiles/vimrc /etc/vim/
+COPY configfiles/ycm_extra_conf.py /etc/vim/
+#RUN vim -c ':call doge#install()' -c ':q'
+RUN chmod 777 /etc/vim/
+RUN chmod 777 /etc/vim/vimrc
+RUN chmod 777 /etc/vim/bundle
+
 RUN pip3 install setuptools matplotlib Mosek scipy quadpy six cython tk
 
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -41,24 +50,23 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-rqt-gui-py \
                     ros-noetic-rqt-py-common \
                     ros-noetic-moveit-msgs \
-                    ros-noetic-rqt-joint-trajectory-controller
+                    ros-noetic-rqt-joint-trajectory-controller \
+                    avahi-daemon \
+                    avahi-autoipd \
+                    openssh-server
 
-
-
+RUN service ssh start
+RUN echo '[server]' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'enable-dbus=no' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'domain-name=local' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'host-name=gsplines-ros' >> /etc/avahi/avahi-daemon.conf
+RUN service avahi-daemon restart
 RUN mkdir -p /aux_ws/src
 RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /aux_ws/src/ur_description_minimal
 RUN git clone https://github.com/tork-a/rqt_joint_trajectory_plot.git /aux_ws/src/rqt_joint_trajectory_plot
 RUN bash -c 'source /opt/ros/noetic/setup.bash && cd /aux_ws && catkin config --install --install-space /opt/ros/noetic/ --extend /opt/ros/noetic/ && catkin build'
 
 
-COPY vim_installation.bash /
-RUN cd / && bash vim_installation.bash
-COPY configfiles/vimrc /etc/vim/
-COPY configfiles/ycm_extra_conf.py /etc/vim/
-#RUN vim -c ':call doge#install()' -c ':q'
-RUN chmod 777 /etc/vim/
-RUN chmod 777 /etc/vim/vimrc
-RUN chmod 777 /etc/vim/bundle
 # user handling
 ARG myuser
 ARG myuid
@@ -69,6 +77,7 @@ RUN addgroup --gid ${mygid} ${mygroup} --force-badname
 RUN adduser --gecos "" --disabled-password  --uid ${myuid} --gid ${mygid} ${myuser} --force-badname
 #add user to sudoers
 RUN echo "${myuser} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN echo "${myuser}:docker" | chpasswd
 
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> /etc/bash.bashrc
