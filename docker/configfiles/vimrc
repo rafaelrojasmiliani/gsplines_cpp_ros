@@ -51,7 +51,7 @@ call vundle#begin('/etc/vim/bundle/')
         let g:ale_linters = {'python': ['pylint', 'flake8', 'prospector'],'xml':['xmllint'], 'cpp':['clangtidy', 'cc']}
         let g:ale_c_clangformat_executable='clang-format-10'
         let g:ale_cpp_clangtidy_extra_options=''
-        let g:ale_cpp_cc_options='-I ''/opt/ros/noetic/include'' -I ''/usr/include/eigen3'' -I ''/gsplinespp/include'' -I ''install/include'' '
+        let g:ale_cpp_cc_options='-std=c++17 -I ''/opt/ros/noetic/include'' -I ''/usr/include/eigen3'' -I ''/gsplinespp/include'' -I ''install/include'' '
         let g:ale_sign_error = 'E'
         let g:ale_sign_warning = 'W'
         let g:ale_lint_on_text_changed = 'never'

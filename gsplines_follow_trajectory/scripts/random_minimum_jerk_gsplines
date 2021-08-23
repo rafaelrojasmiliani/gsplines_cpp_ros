@@ -1,13 +1,14 @@
 #! /usr/bin/env python
 """
-    This is a generator of minimum jerk paths
+    This is a generator of minimum jerk motions unsing the follow joint
+    trajectory control
 """
 import numpy as np
-from gsplines_msgs.msg import JointGSpline
 import rospy
-from control_msgs.msg import FollowJointTrajectoryAction
+from gsplines_msgs.msg import FollowJointGSplineAction
+from gsplines_msgs.msg import FollowJointGSplineGoal
 from gsplines import minimum_jerk_path
-from gsplines_ros import gspline_to_follow_joint_trajectory_goal
+from gsplines_ros import gspline_to_joint_gspline_msg
 from sensor_msgs.msg import JointState
 import actionlib
 from actionlib_msgs.msg import GoalStatus
@@ -21,9 +22,8 @@ def main():
 
     params = {}
     params['rate'] = 0.5
-    params['control_step'] = 0.01
     params['number_of_waypoints'] = 3
-    params['action_ns'] = 'pos_joint_traj_controller'
+    params['action_ns'] = ''
     params['waypoint_radius'] = 0.05
     params['execution_time'] = 1.0
 
@@ -31,13 +31,16 @@ def main():
         params[key] = rospy.get_param('~'+key, value)
 
     motion_action = actionlib.SimpleActionClient(
-        params['action_ns']+'/follow_joint_trajectory',
-        FollowJointTrajectoryAction)
+        params['action_ns']+'/follow_joint_gspline',
+        FollowJointGSplineAction)
 
-    server_is_up = motion_action.wait_for_server(rospy.Duration(5.0))
+    print('-------------------')
+    print(params['action_ns']+'/follow_joint_gspline')
+    print('-------------------')
+    server_is_up = motion_action.wait_for_server(rospy.Duration(60.0))
     if not server_is_up:
         rospy.logerr_once(
-            'No action follow_joint_trajectory in namespace ' +
+            'No action follow_joint_gspline in namespace ' +
             params['action_ns'])
         return
     rospy.loginfo('Connected to the action server '+params['action_ns'])
@@ -64,8 +67,11 @@ def main():
         first_motion_waypoints[0, :] = initial_position
         first_motion_waypoints[1, :] = desired_initial_position
         first_motion = minimum_jerk_path(first_motion_waypoints)
-        first_goal = gspline_to_follow_joint_trajectory_goal(
-            first_motion, joint_names, rospy.Duration(0.01))
+
+        first_goal = FollowJointGSplineGoal()
+        first_goal.gspline = gspline_to_joint_gspline_msg(
+            first_motion, joint_names)
+
         goal_state = motion_action.send_goal_and_wait(first_goal)
         initial_position = desired_initial_position
         rate.sleep()
@@ -85,12 +91,12 @@ def main():
         trj = minimum_jerk_path(waypoints)
         trj = trj.linear_scaling_new_execution_time(params['execution_time'])
 
-        goal = gspline_to_follow_joint_trajectory_goal(
-            trj, joint_names, rospy.Duration(0.01))
+        goal = FollowJointGSplineGoal()
+        goal.gspline = gspline_to_joint_gspline_msg(trj, joint_names)
 
         goal_state = motion_action.send_goal_and_wait(goal)
 
-        if(goal_state != GoalStatus.SUCCEEDED):
+        if goal_state != GoalStatus.SUCCEEDED:
             rospy.logerr(motion_action.get_goal_status_text())
             return
 

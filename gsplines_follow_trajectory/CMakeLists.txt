@@ -60,5 +60,8 @@ install(TARGETS follow_joint_trajectory_wrapper
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/gsplines_follow_trajectory
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}/..)
 
-catkin_install_python(PROGRAMS scripts/random_minimum_jerk_motions DESTINATION
+catkin_install_python(PROGRAMS scripts/random_minimum_jerk_trajectories
+                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+catkin_install_python(PROGRAMS scripts/random_minimum_jerk_gsplines DESTINATION
                       ${CATKIN_PACKAGE_BIN_DESTINATION})

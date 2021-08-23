@@ -69,8 +69,7 @@ gspline_to_joint_trajectory_msgs(const gsplines::GSpline &_gspline,
       Eigen::VectorXd::LinSpaced(number_of_segments + 1, t0, t1);
 
   gsplines::functions::FunctionExpression gspline_diff_1 = _gspline.derivate();
-  gsplines::functions::FunctionExpression gspline_diff_2 =
-      gspline_diff_1.derivate();
+  gsplines::functions::FunctionExpression gspline_diff_2 = _gspline.derivate(2);
 
   Eigen::MatrixXd gspline_evaluated = _gspline(time_spam);
   Eigen::MatrixXd gspline_diff_1_evaluated = gspline_diff_1(time_spam);
@@ -149,4 +148,62 @@ joint_gspline_msgs_to_follow_joint_trajectory_goal(
   return gspline_to_follow_joint_trajectory_goal(trj, _trj.name, _step);
 }
 
+gsplines_msgs::FollowJointGSplineFeedback
+follow_joint_trajectory_feedback_to_follow_joint_gspline_feedback(
+    const control_msgs::FollowJointTrajectoryFeedback &_msg) {
+
+  gsplines_msgs::FollowJointGSplineFeedback result;
+
+  result.joint_names = _msg.joint_names;
+
+  result.actual = _msg.actual;
+
+  result.desired = _msg.desired;
+
+  result.error = _msg.error;
+
+  result.header = std_msgs::Header();
+  result.header.stamp = ros::Time::now();
+
+  return std::move(result);
+}
+
+control_msgs::FollowJointTrajectoryGoal
+follow_joint_gspline_goal_to_follow_joint_trajectory_goal(
+    const gsplines_msgs::FollowJointGSplineGoal &_msg,
+    const ros::Duration &_control_step) {
+
+  control_msgs::FollowJointTrajectoryGoal result;
+
+  result.goal_time_tolerance = _msg.goal_time_tolerance;
+  result.goal_tolerance = _msg.goal_tolerance;
+  result.path_tolerance = _msg.path_tolerance;
+
+  result.trajectory =
+      joint_gspline_msg_to_joint_trajectory_msgs(_msg.gspline, _control_step);
+
+  return std::move(result);
+}
+control_msgs::FollowJointTrajectoryResult
+follow_joint_gspline_result_to_follow_joint_trajectory_result(
+    const gsplines_msgs::FollowJointGSplineResult &_msg,
+    const ros::Duration &_control_step) {
+
+  control_msgs::FollowJointTrajectoryResult result;
+
+  result.error_code = _msg.error_code;
+  result.error_string = _msg.error_string;
+
+  return std::move(result);
+}
+gsplines_msgs::FollowJointGSplineResult
+follow_joint_trajectory_result_to_follow_joint_gspline_result(
+    const control_msgs::FollowJointTrajectoryResult &_msg) {
+  gsplines_msgs::FollowJointGSplineResult result;
+
+  result.error_code = _msg.error_code;
+  result.error_string = _msg.error_string;
+
+  return std::move(result);
+}
 } // namespace gsplines_ros
