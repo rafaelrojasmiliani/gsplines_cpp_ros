@@ -79,13 +79,13 @@ gspline_to_joint_trajectory_msgs(const gsplines::GSpline &_gspline,
 
     trajectory_msgs::JointTrajectoryPoint trj_point;
 
-    trj_point.positions = EIGEN_TO_STD_VECTOR(gspline_evaluated.row(uici));
+    for (std::size_t uicj = 0; uicj < _gspline.get_codom_dim(); uicj++) {
+      trj_point.positions.push_back(gspline_evaluated(uici, uicj));
 
-    trj_point.velocities =
-        EIGEN_TO_STD_VECTOR(gspline_diff_1_evaluated.row(uici));
+      trj_point.velocities.push_back(gspline_diff_1_evaluated(uici, uicj));
 
-    trj_point.accelerations =
-        EIGEN_TO_STD_VECTOR(gspline_diff_2_evaluated.row(uici));
+      trj_point.accelerations.push_back(gspline_diff_2_evaluated(uici, uicj));
+    }
 
     trj_point.time_from_start = ros::Duration(std::fabs(time_spam(uici) - t0));
 

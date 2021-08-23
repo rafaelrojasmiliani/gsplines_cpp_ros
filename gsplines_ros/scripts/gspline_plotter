@@ -3,6 +3,8 @@
     Listest to gsplines and plot them
 """
 from gsplines_msgs.msg import JointGSpline
+from gsplines_msgs.msg import FollowJointGSplineActionGoal
+
 import rospy
 from trajectory_msgs.msg import JointTrajectory
 from gsplines_ros import joint_gspline_msg_to_gspline
@@ -75,7 +77,7 @@ class Node:
     """ Generic node class"""
 
     def __init__(self):
-        rospy.init_node('gspline_to_joint_trajectory', anonymous=True)
+        rospy.init_node('gsplines_plotter')
         self.params = {}
         self.params['input_topic'] = "input_gspline"
         self.params['plot_up_to_derivative'] = 3
@@ -87,22 +89,35 @@ class Node:
             self.params[key] = rospy.get_param('~'+key, value)
 
         self.subs_ = rospy.Subscriber(
-            self.params['input_topic'], JointGSpline, self.callback)
+            self.params['input_topic'], JointGSpline, self.callback_msg)
+
+        self.subs_ = rospy.Subscriber(
+            "follow_joint_gspline/goal", FollowJointGSplineActionGoal,
+            self.callback_goal)
 
         self.figure_ = plt.figure()
         plt.show()
 
-    def callback(self, _msg: JointGSpline):
-        """ plot received message"""
-        trj = joint_gspline_msg_to_gspline(_msg)
+    def plot(self, _gspline):
+        """ plot the gspline"""
 
         plt.clf()
 
-        show_piecewisefunction(self.figure_, trj,
+        show_piecewisefunction(self.figure_, _gspline,
                                self.params['plot_up_to_derivative'],
                                self.params['plot_step'],
-                               self.params['title'], _msg.name)
+                               self.params['title'])
         mypause(0.001)
+
+    def callback_msg(self, _msg: JointGSpline):
+        """ plot received message"""
+        trj = joint_gspline_msg_to_gspline(_msg)
+
+        self.plot(trj)
+
+    def callback_goal(self, _msg: FollowJointGSplineActionGoal):
+        """ plot received message"""
+        self.callback_msg(_msg.goal.gspline)
 
 
 if __name__ == "__main__":
