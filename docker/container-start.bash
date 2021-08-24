@@ -42,8 +42,10 @@ main(){
 
         DOCKER_NETWORK_OPTIONS="--net=br0 --env=ROS_MASTER_URI=http://10.10.238.1:11311 --env=ROS_IP=10.10.238.5 --ip 10.10.238.5 "
 
-        #docker network create --driver=bridge --ip-range=10.10.238.0/24 --subnet=10.10.238.0/24 --aux-address='ip1=10.10.238.4' -o "com.docker.network.bridge.name=br0" br0
+        if [[ ! $(docker network ls | grep br0 ) ]]; then
+            docker network create --driver=bridge --ip-range=10.10.238.0/24 --subnet=10.10.238.0/24 --aux-address='ip1=10.10.238.4' -o "com.docker.network.bridge.name=br0" br0
         fi
+    fi
     else
 
         DOCKER_NETWORK_OPTIONS="--env=ROS_MASTER_URI=http://127.0.0.1:11311 --env=ROS_MASTER_IP=127.0.0.1 --env=ROS_IP=127.0.0.1" 

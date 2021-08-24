@@ -27,22 +27,13 @@ def main():
     params['waypoint_radius'] = 0.05
     params['execution_time'] = 1.0
 
-    print('------------------- BEFORE')
-    print('action_ns', params['action_ns'])
     for key, value in params.items():
-        print('key', key, 'value', value)
         params[key] = rospy.get_param('~'+key, value)
-        print('key', key, 'params[key]', params[key])
-    print('------------------- AFTER')
-    print('action_ns', params['action_ns'])
 
     motion_action = actionlib.SimpleActionClient(
         params['action_ns']+'/follow_joint_gspline',
         FollowJointGSplineAction)
 
-    print('-------------------')
-    print(params['action_ns']+'/follow_joint_gspline')
-    print('-------------------')
     server_is_up = motion_action.wait_for_server(rospy.Duration(60.0))
     if not server_is_up:
         rospy.logerr_once(

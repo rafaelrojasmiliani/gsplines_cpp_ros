@@ -50,17 +50,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o
                     ros-noetic-rqt-gui-py \
                     ros-noetic-rqt-py-common \
                     ros-noetic-moveit-msgs \
-                    ros-noetic-rqt-joint-trajectory-controller \
-                    avahi-daemon \
-                    avahi-autoipd \
-                    openssh-server
+                    ros-noetic-rqt-joint-trajectory-controller
 
-RUN service ssh start
-RUN echo '[server]' >> /etc/avahi/avahi-daemon.conf
-RUN echo 'enable-dbus=no' >> /etc/avahi/avahi-daemon.conf
-RUN echo 'domain-name=local' >> /etc/avahi/avahi-daemon.conf
-RUN echo 'host-name=gsplines-ros' >> /etc/avahi/avahi-daemon.conf
-RUN service avahi-daemon restart
+
 RUN mkdir -p /aux_ws/src
 RUN git clone https://github.com/rafaelrojasmiliani/ur_description_minimal.git /aux_ws/src/ur_description_minimal
 RUN git clone https://github.com/tork-a/rqt_joint_trajectory_plot.git /aux_ws/src/rqt_joint_trajectory_plot
@@ -83,3 +75,17 @@ RUN echo "${myuser}:docker" | chpasswd
 RUN echo "source /opt/ros/noetic/setup.bash" >> /etc/bash.bashrc
 WORKDIR /catkinws
 RUN chmod 777 /catkinws
+
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends -o Dpkg::Options::="--force-confnew" \
+                    avahi-daemon \
+                    avahi-autoipd \
+                    openssh-server \
+                    isc-dhcp-client \
+                    iproute2
+
+RUN service ssh start
+RUN echo '[server]' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'enable-dbus=no' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'domain-name=local' >> /etc/avahi/avahi-daemon.conf
+RUN echo 'host-name=gsplines-ros' >> /etc/avahi/avahi-daemon.conf

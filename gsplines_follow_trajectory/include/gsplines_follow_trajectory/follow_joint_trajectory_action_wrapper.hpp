@@ -56,6 +56,8 @@ public:
   virtual void active_action();
   virtual void feedback_action(
       const control_msgs::FollowJointTrajectoryFeedbackConstPtr &_result);
+
+  void forward_state(const actionlib::SimpleClientGoalState &state);
 };
 
 } // namespace gsplines_follow_trajectory

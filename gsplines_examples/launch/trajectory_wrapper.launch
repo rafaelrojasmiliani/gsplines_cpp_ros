@@ -8,7 +8,7 @@
   <node name="motion_generator" pkg="gsplines_follow_trajectory" type="random_minimum_jerk_gsplines" respawn="false" output="screen">
     <param name="rate" value="0.4"/>
     <param name="number_of_waypoints" value="5"/>
-    <param name="waypoint_radius" value="0.01"/>
+    <param name="waypoint_radius" value="0.1"/>
     <param name="execution_time" value="2.5"/>
   </node>
 </launch>

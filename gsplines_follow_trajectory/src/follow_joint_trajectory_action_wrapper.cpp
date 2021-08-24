@@ -46,6 +46,7 @@ void FollowJointTrajectoryActionWrapper::action_callback(
                   _1)
 
   );
+  action_client_->getState();
 
   action_client_->waitForResult();
 }
@@ -55,7 +56,10 @@ void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
   action_server_->publishFeedback(_msg);
 }
 
-void FollowJointTrajectoryActionWrapper::prehemption_action() {}
+void FollowJointTrajectoryActionWrapper::prehemption_action() {
+
+  action_client_->cancelGoal();
+}
 
 void FollowJointTrajectoryActionWrapper::done_action(
     const actionlib::SimpleClientGoalState &state,
@@ -66,11 +70,17 @@ void FollowJointTrajectoryActionWrapper::done_action(
 
   switch (state.state_) {
   case actionlib::SimpleClientGoalState::ABORTED:
+  case actionlib::SimpleClientGoalState::REJECTED:
     action_server_->setAborted(result, state.text_);
     break;
 
   case actionlib::SimpleClientGoalState::SUCCEEDED:
     action_server_->setSucceeded(result, state.text_);
+    break;
+
+  case actionlib::SimpleClientGoalState::RECALLED:
+  case actionlib::SimpleClientGoalState::PREEMPTED:
+    action_server_->setPreempted();
     break;
   default:
     break;
