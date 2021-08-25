@@ -42,7 +42,7 @@ public:
                                      const std::string &_fjta_name,
                                      double _control_step);
   virtual ~FollowJointTrajectoryActionWrapper(){};
-  void
+  virtual void
   action_callback(const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
 
   void feedback_repeater_method(
