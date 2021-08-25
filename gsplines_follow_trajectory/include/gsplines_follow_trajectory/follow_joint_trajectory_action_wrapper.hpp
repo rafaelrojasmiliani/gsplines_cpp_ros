@@ -14,13 +14,6 @@ private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_prv_;
 
-  std::unique_ptr<
-      actionlib::SimpleActionServer<gsplines_msgs::FollowJointGSplineAction>>
-      action_server_;
-
-  std::unique_ptr<
-      actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>>
-      action_client_;
   gsplines_msgs::FollowJointGSplineFeedback feedback_;
   gsplines_msgs::FollowJointGSplineResult result_;
   std::string name_;
@@ -32,6 +25,15 @@ private:
   double control_step_;
   std::string target_action_ns_;
 
+protected:
+  std::unique_ptr<
+      actionlib::SimpleActionServer<gsplines_msgs::FollowJointGSplineAction>>
+      action_server_;
+
+  std::unique_ptr<
+      actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>>
+      action_client_;
+
 public:
   FollowJointTrajectoryActionWrapper(
       const FollowJointTrajectoryActionWrapper &) = delete;
@@ -41,7 +43,9 @@ public:
   FollowJointTrajectoryActionWrapper(const std::string &_name,
                                      const std::string &_fjta_name,
                                      double _control_step);
-  virtual ~FollowJointTrajectoryActionWrapper(){};
+
+  virtual ~FollowJointTrajectoryActionWrapper() = default;
+
   virtual void
   action_callback(const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
 
@@ -58,6 +62,8 @@ public:
       const control_msgs::FollowJointTrajectoryFeedbackConstPtr &_result);
 
   void forward_state(const actionlib::SimpleClientGoalState &state);
+
+  double get_control_step() const { return control_step_; }
 };
 
 } // namespace gsplines_follow_trajectory

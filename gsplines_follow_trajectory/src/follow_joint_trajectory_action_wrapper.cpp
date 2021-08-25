@@ -43,9 +43,8 @@ void FollowJointTrajectoryActionWrapper::action_callback(
                   _2),
       boost::bind(&FollowJointTrajectoryActionWrapper::active_action, this),
       boost::bind(&FollowJointTrajectoryActionWrapper::feedback_action, this,
-                  _1)
+                  _1));
 
-  );
   action_client_->getState();
 
   action_client_->waitForResult();
