@@ -34,11 +34,11 @@ def main():
         params['action_ns']+'/follow_joint_gspline',
         FollowJointGSplineAction)
 
-    server_is_up = motion_action.wait_for_server(rospy.Duration(60.0))
+    server_is_up = motion_action.wait_for_server()
     if not server_is_up:
         rospy.logerr_once(
-            'No action follow_joint_gspline in namespace ' +
-            params['action_ns'])
+            ':::No action follow_joint_gspline in namespace \"{:s}\"'.format(
+                params['action_ns']))
         return
     rospy.loginfo('Connected to the action server '+params['action_ns'])
 

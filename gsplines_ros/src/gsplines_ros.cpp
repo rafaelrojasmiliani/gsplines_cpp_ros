@@ -95,7 +95,7 @@ gspline_to_joint_trajectory_msgs(const gsplines::GSpline &_gspline,
   result.joint_names = _joint_names;
 
   std_msgs::Header header;
-  header.stamp = ros::Time::now();
+  header.stamp = ros::Time(0.0);
 
   result.header = header;
 
@@ -143,7 +143,7 @@ trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
   result.joint_names = _joint_names;
 
   std_msgs::Header header;
-  header.stamp = ros::Time::now();
+  header.stamp = ros::Time(0.0);
 
   result.header = header;
 

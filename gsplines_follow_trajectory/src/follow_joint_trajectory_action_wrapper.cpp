@@ -69,12 +69,14 @@ void FollowJointTrajectoryActionWrapper::done_action(
 
   switch (state.state_) {
   case actionlib::SimpleClientGoalState::ABORTED:
+    action_server_->setAborted(result, state.text_ + "(aborted)");
+    break;
   case actionlib::SimpleClientGoalState::REJECTED:
-    action_server_->setAborted(result, state.text_);
+    action_server_->setAborted(result, state.text_ + "(rejected)");
     break;
 
   case actionlib::SimpleClientGoalState::SUCCEEDED:
-    action_server_->setSucceeded(result, state.text_);
+    action_server_->setSucceeded(result, state.text_ + "(succeeded)");
     break;
 
   case actionlib::SimpleClientGoalState::RECALLED:
