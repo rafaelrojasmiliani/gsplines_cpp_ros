@@ -24,6 +24,8 @@ private:
 
   double control_step_;
   std::string target_action_ns_;
+  double instant_position_error_inf_norm_;
+  double time_from_start_error_;
 
 protected:
   std::unique_ptr<
@@ -46,8 +48,10 @@ public:
 
   virtual ~FollowJointTrajectoryActionWrapper() = default;
 
-  virtual void
-  action_callback(const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
+  void forward_goal(const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
+  void forward_goal_and_wait(
+      const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
+  virtual void action_callback();
 
   void feedback_repeater_method(
       const gsplines_msgs::FollowJointGSplineFeedbackConstPtr _msg);

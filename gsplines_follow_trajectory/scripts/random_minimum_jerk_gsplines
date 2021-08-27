@@ -14,6 +14,22 @@ import actionlib
 from actionlib_msgs.msg import GoalStatus
 
 
+def get_actual_joint_position(_joint_names: list):
+    """ get the state of the robot
+    """
+
+    try:
+        joint_state_msg = rospy.wait_for_message(
+            'joint_states', JointState, timeout=rospy.Duration(5.0))
+    except rospy.ROSInterruptException:
+        raise ValueError('cannot get the sate')
+
+    list_of_pairs = dict(
+        list(zip(joint_state_msg.name, joint_state_msg.position)))
+
+    return np.array([list_of_pairs[name] for name in _joint_names])
+
+
 def main():
     """
     Generic loop
@@ -24,11 +40,19 @@ def main():
     params['rate'] = 0.5
     params['number_of_waypoints'] = 3
     params['action_ns'] = ''
+    params['control_name'] = ''
     params['waypoint_radius'] = 0.05
     params['execution_time'] = 1.0
+    params['persistent'] = True
 
     for key, value in params.items():
         params[key] = rospy.get_param('~'+key, value)
+
+    try:
+        joint_names = rospy.get_param(params['control_name']+'/joints')
+    except KeyError:
+        rospy.logerr_once('no joint names defined on control. cannot proceed')
+        return
 
     motion_action = actionlib.SimpleActionClient(
         params['action_ns']+'/follow_joint_gspline',
@@ -37,22 +61,15 @@ def main():
     server_is_up = motion_action.wait_for_server()
     if not server_is_up:
         rospy.logerr_once(
-            ':::No action follow_joint_gspline in namespace \"{:s}\"'.format(
+            'No action follow_joint_gspline in namespace \"{:s}\"'.format(
                 params['action_ns']))
         return
     rospy.loginfo('Connected to the action server '+params['action_ns'])
 
     rate = rospy.Rate(params['rate'])
 
-    try:
-        initial_state = rospy.wait_for_message(
-            'joint_states', JointState, timeout=rospy.Duration(5.0))
-    except rospy.ROSInterruptException:
-        return
-
-    codom_dim = len(initial_state.name)
-    initial_position = initial_state.position
-    joint_names = initial_state.name
+    initial_position = get_actual_joint_position(joint_names)
+    codom_dim = len(initial_position)
 
     if rospy.has_param('~initial_position'):
 
@@ -94,8 +111,12 @@ def main():
         goal_state = motion_action.send_goal_and_wait(goal)
 
         if goal_state != GoalStatus.SUCCEEDED:
-            rospy.logerr(motion_action.get_goal_status_text())
-            return
+            rospy.logerr('Action did not succeeded :' +
+                         motion_action.get_goal_status_text())
+            if not params['persistent']:
+                return
+
+        initial_position = get_actual_joint_position(joint_names)
 
         rate.sleep()
 
