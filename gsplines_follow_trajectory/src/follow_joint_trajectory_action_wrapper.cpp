@@ -26,7 +26,10 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
   action_server_->registerGoalCallback(
       boost::bind(&FollowJointTrajectoryActionWrapper::action_callback, this));
 
+  ROS_INFO("Waiting for action %s",
+           (_fjta_name + "/follow_joint_trajectory").c_str());
   if (action_client_->waitForServer(ros::Duration(60.0))) {
+    ROS_INFO("Starting action server %s", name_.c_str());
     action_server_->start();
   }
 }

@@ -58,13 +58,16 @@ def main():
         params['action_ns']+'/follow_joint_gspline',
         FollowJointGSplineAction)
 
+    rospy.loginfo("Waiting for action " +
+                  params['action_ns']+'/follow_joint_gspline')
     server_is_up = motion_action.wait_for_server()
     if not server_is_up:
         rospy.logerr_once(
             'No action follow_joint_gspline in namespace \"{:s}\"'.format(
                 params['action_ns']))
         return
-    rospy.loginfo('Connected to the action server '+params['action_ns'])
+    rospy.loginfo('Connected to the action server ' +
+                  params['action_ns']+'/follow_joint_gspline')
 
     rate = rospy.Rate(params['rate'])
 
