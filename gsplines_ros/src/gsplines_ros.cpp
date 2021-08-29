@@ -4,7 +4,7 @@
                        _eigen_vector.data() + _eigen_vector.size()))
 namespace gsplines_ros {
 
-gsplines::GSpline msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
+gsplines::GSpline gspline_msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
 
   std::unique_ptr<gsplines::basis::Basis> basis =
       gsplines::basis::string_to_basis(_msg.basis);
@@ -54,9 +54,10 @@ gspline_to_joint_gspline_msg(const gsplines::GSpline &_gspline,
 }
 
 trajectory_msgs::JointTrajectory
-gspline_to_joint_trajectory_msgs(const gsplines::GSpline &_gspline,
-                                 const std::vector<std::string> &_joint_names,
-                                 const ros::Duration &_step) {
+gspline_to_joint_trajectory_msg(const gsplines::GSpline &_gspline,
+                                const std::vector<std::string> &_joint_names,
+                                const ros::Duration &_step,
+                                std_msgs::Header _header) {
 
   trajectory_msgs::JointTrajectory result;
 
@@ -94,17 +95,15 @@ gspline_to_joint_trajectory_msgs(const gsplines::GSpline &_gspline,
 
   result.joint_names = _joint_names;
 
-  std_msgs::Header header;
-  header.stamp = ros::Time(0.0);
-
-  result.header = header;
+  result.header = _header;
 
   return result;
 }
 
 trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
     const gsplines::functions::FunctionExpression &_trj,
-    const std::vector<std::string> &_joint_names, const ros::Duration &_step) {
+    const std::vector<std::string> &_joint_names, const ros::Duration &_step,
+    std_msgs::Header _header) {
 
   trajectory_msgs::JointTrajectory result;
 
@@ -142,38 +141,38 @@ trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
 
   result.joint_names = _joint_names;
 
-  std_msgs::Header header;
-  header.stamp = ros::Time(0.0);
-
-  result.header = header;
+  result.header = _header;
 
   return result;
 }
 
-trajectory_msgs::JointTrajectory gspline_msg_to_joint_trajectory_msgs(
-    const gsplines_msgs::GSpline _trj,
-    const std::vector<std::string> _joint_names, const ros::Duration &_step) {
+trajectory_msgs::JointTrajectory
+gspline_msg_to_joint_trajectory_msg(const gsplines_msgs::GSpline _trj,
+                                    const std::vector<std::string> _joint_names,
+                                    const ros::Duration &_step,
+                                    std_msgs::Header _header) {
 
-  gsplines::GSpline trj = msg_to_gspline(_trj);
+  gsplines::GSpline trj = gspline_msg_to_gspline(_trj);
 
-  return gspline_to_joint_trajectory_msgs(trj, _joint_names, _step);
+  return gspline_to_joint_trajectory_msg(trj, _joint_names, _step, _header);
 }
 
-trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msgs(
+trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msg(
     const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_step) {
 
-  gsplines::GSpline trj = msg_to_gspline(_trj.gspline);
-  return gspline_to_joint_trajectory_msgs(trj, _trj.name, _step);
+  gsplines::GSpline trj = gspline_msg_to_gspline(_trj.gspline);
+  return gspline_to_joint_trajectory_msg(trj, _trj.name, _step, _trj.header);
 }
 
 control_msgs::FollowJointTrajectoryGoal gspline_to_follow_joint_trajectory_goal(
     const gsplines::GSpline &_gspline,
-    const std::vector<std::string> &_joint_names, const ros::Duration &_step) {
+    const std::vector<std::string> &_joint_names, const ros::Duration &_step,
+    std_msgs::Header _header) {
 
   control_msgs::FollowJointTrajectoryGoal result;
 
   result.trajectory =
-      gspline_to_joint_trajectory_msgs(_gspline, _joint_names, _step);
+      gspline_to_joint_trajectory_msg(_gspline, _joint_names, _step, _header);
 
   return result;
 }
@@ -181,32 +180,36 @@ control_msgs::FollowJointTrajectoryGoal gspline_to_follow_joint_trajectory_goal(
 control_msgs::FollowJointTrajectoryGoal
 function_expression_to_follow_joint_trajectory_goal(
     const gsplines::functions::FunctionExpression &_trj,
-    const std::vector<std::string> &_joint_names, const ros::Duration &_step) {
+    const std::vector<std::string> &_joint_names, const ros::Duration &_step,
+    std_msgs::Header _header) {
 
   control_msgs::FollowJointTrajectoryGoal result;
 
-  result.trajectory =
-      function_expression_to_joint_trajectory_msg(_trj, _joint_names, _step);
+  result.trajectory = function_expression_to_joint_trajectory_msg(
+      _trj, _joint_names, _step, _header);
 
   return result;
 }
 
 control_msgs::FollowJointTrajectoryGoal
-gspline_msgs_to_follow_joint_trajectory_goal(
+gspline_msg_to_follow_joint_trajectory_goal(
     const gsplines_msgs::JointGSpline &_trj,
-    const std::vector<std::string> &_joint_names, const ros::Duration &_step) {
+    const std::vector<std::string> &_joint_names, const ros::Duration &_step,
+    std_msgs::Header _header) {
 
-  gsplines::GSpline trj = msg_to_gspline(_trj.gspline);
+  gsplines::GSpline trj = gspline_msg_to_gspline(_trj.gspline);
 
-  return gspline_to_follow_joint_trajectory_goal(trj, _joint_names, _step);
+  return gspline_to_follow_joint_trajectory_goal(trj, _joint_names, _step,
+                                                 _header);
 }
 
 control_msgs::FollowJointTrajectoryGoal
-joint_gspline_msgs_to_follow_joint_trajectory_goal(
+joint_gspline_msg_to_follow_joint_trajectory_goal(
     const gsplines_msgs::JointGSpline _trj, const ros::Duration &_step) {
 
-  gsplines::GSpline trj = msg_to_gspline(_trj.gspline);
-  return gspline_to_follow_joint_trajectory_goal(trj, _trj.name, _step);
+  gsplines::GSpline trj = gspline_msg_to_gspline(_trj.gspline);
+  return gspline_to_follow_joint_trajectory_goal(trj, _trj.name, _step,
+                                                 _trj.header);
 }
 
 gsplines_msgs::FollowJointGSplineFeedback
@@ -241,7 +244,7 @@ follow_joint_gspline_goal_to_follow_joint_trajectory_goal(
   result.path_tolerance = _msg.path_tolerance;
 
   result.trajectory =
-      joint_gspline_msg_to_joint_trajectory_msgs(_msg.gspline, _control_step);
+      joint_gspline_msg_to_joint_trajectory_msg(_msg.gspline, _control_step);
 
   return std::move(result);
 }

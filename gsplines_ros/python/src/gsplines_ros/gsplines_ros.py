@@ -5,20 +5,20 @@ Message conversions for gsplines
 import rospy
 
 import gsplines
-from gsplines import PyInterpolator as Interpolator
 from gsplines import string_to_basis
 from trajectory_msgs.msg import JointTrajectoryPoint
 from trajectory_msgs.msg import JointTrajectory
-from control_msgs.msg import JointTolerance
 from control_msgs.msg import FollowJointTrajectoryGoal
 
 from std_msgs.msg import Header
 
 from gsplines_msgs.msg import GSpline, JointGSpline
 import numpy as np
+from typing import List
 
 
 def gspline_msg_to_gspline(_msg: GSpline):
+    """ GSpline message to GSpline """
 
     basis = string_to_basis(_msg.basis)
 
@@ -37,6 +37,7 @@ def gspline_msg_to_gspline(_msg: GSpline):
 
 
 def joint_gspline_msg_to_gspline(_msg: JointGSpline):
+    """ Joint GSpline message to GSpline """
 
     basis = string_to_basis(_msg.gspline.basis)
 
@@ -56,6 +57,7 @@ def joint_gspline_msg_to_gspline(_msg: JointGSpline):
 
 
 def gspline_to_msg(_gspline: gsplines.GSpline):
+    """ GSpline message to GSpline message """
     result = GSpline()
 
     result.basis = _gspline.get_basis_name()
@@ -73,7 +75,9 @@ def gspline_to_msg(_gspline: gsplines.GSpline):
     return result
 
 
-def gspline_to_joint_gspline_msg(_gspline, _joint_names):
+def gspline_to_joint_gspline_msg(_gspline: gsplines.GSpline,
+                                 _joint_names: list,
+                                 _header: Header = Header()):
     """
     Transforms a Gsplines into a JointGSpline message
     """
@@ -81,11 +85,13 @@ def gspline_to_joint_gspline_msg(_gspline, _joint_names):
     result = JointGSpline()
     result.gspline = gspline_to_msg(_gspline)
     result.name = _joint_names
+    result.header = _header
     return result
 
 
 def gspline_to_joint_trajectory_msg(_gspline, _joint_names,
-                                    _step: rospy.Duration):
+                                    _step: rospy.Duration,
+                                    _header: Header = Header()):
     """
     converts a gspline into a JointTrajectory message
 
@@ -115,47 +121,75 @@ def gspline_to_joint_trajectory_msg(_gspline, _joint_names,
         trjpoint.time_from_start = rospy.Duration.from_sec(time_i)
         result.points.append(trjpoint)
 
-    header = Header()
-    header.stamp = rospy.Time()
-    result.header = header
+    result.header = _header
     result.joint_names = _joint_names
     return result
 
 
-def gspline_msg_to_joint_trajectory_msg(_gspline_msg, _joint_names, _step):
+def gspline_msg_to_joint_trajectory_msg(_gspline_msg: GSpline,
+                                        _joint_names: List[str],
+                                        _step: rospy.Duration,
+                                        _header: Header = Header()):
+    """
+
+    :param _gspline_msg gsplines_msgs.msg.GSpline: gspline
+    :param _joint_names list of joint ames: joint names
+    :param _step control step: control steo
+    """
     gspline = gspline_msg_to_gspline(_gspline_msg)
-    return gspline_to_joint_trajectory_msg(gspline, _joint_names, _step)
+    return gspline_to_joint_trajectory_msg(gspline,
+                                           _joint_names,
+                                           _step, _header)
 
 
 def joint_gspline_msg_to_joint_trajectory_msg(_joint_gspline_msg:
-                                              JointGSpline, _step):
+                                              JointGSpline,
+                                              _step: rospy.Duration):
+    """
+    converst a JointGSpline message into a JointTrajectory nessage
+
+    :param _joint_gspline_msg JointGSpline: [TODO:description]
+    :param _step rospy.Duration: [TODO:description]
+    :param _header Header: [TODO:description]
+    """
 
     return gspline_msg_to_joint_trajectory_msg(_joint_gspline_msg.gspline,
-                                               _joint_gspline_msg.name, _step)
+                                               _joint_gspline_msg.name,
+                                               _step,
+                                               _joint_gspline_msg.header)
 
 
-def gspline_to_follow_joint_trajectory_goal(_gspline, _joint_names,
-                                            _step: rospy.Duration):
+def gspline_to_follow_joint_trajectory_goal(_gspline: gsplines.GSpline,
+                                            _joint_names: List[str],
+                                            _step: rospy.Duration,
+                                            _header: Header = Header()):
 
     result = FollowJointTrajectoryGoal()
 
     result.trajectory = gspline_to_joint_trajectory_msg(
-        _gspline, _joint_names, _step)
+        _gspline, _joint_names, _step, _header)
 
     return result
 
 
-def gspline_msg_to_follow_joint_trajectory_goal(_gspline_msg,
-                                                _joint_names, _step):
+def gspline_msg_to_follow_joint_trajectory_goal(_gspline_msg: GSpline,
+                                                _joint_names: List[str],
+                                                _step: rospy.Duration,
+                                                _header: Header = Header()):
 
     trj = gspline_msg_to_gspline(_gspline_msg)
     return gspline_msg_to_follow_joint_trajectory_goal(trj,
-                                                       _joint_names, _step)
+                                                       _joint_names, _step,
+                                                       _header)
 
 
-def joint_gspline_msgs_to_follow_joint_trajectory_goal(_joint_gspline_msg,
-                                                       _step):
+def joint_gspline_msgs_to_follow_joint_trajectory_goal(_joint_gspline_msg:
+                                                       JointGSpline,
+                                                       _step: rospy.Duration,
+                                                       _header:
+                                                       Header = Header()):
+
     trj = gspline_msg_to_gspline(_joint_gspline_msg.gspline)
     return gspline_msg_to_follow_joint_trajectory_goal(trj,
                                                        _joint_gspline_msg.name,
-                                                       _step)
+                                                       _step, _header)

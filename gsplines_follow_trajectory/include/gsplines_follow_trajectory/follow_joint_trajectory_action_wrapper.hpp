@@ -36,6 +36,8 @@ protected:
       actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>>
       action_client_;
 
+  ros::Time desired_motion_start_time_;
+
 public:
   FollowJointTrajectoryActionWrapper(
       const FollowJointTrajectoryActionWrapper &) = delete;
@@ -68,6 +70,10 @@ public:
   void forward_state(const actionlib::SimpleClientGoalState &state);
 
   double get_control_step() const { return control_step_; }
+
+  const ros::Time &get_desired_motion_start_time() const {
+    return desired_motion_start_time_;
+  }
 };
 
 } // namespace gsplines_follow_trajectory

@@ -1,14 +1,23 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="control_name"/>
+  <arg name="rate" default="0.5"/>
+  <arg name="control_step" default="0.005"/>
+  <arg name="number_of_waypoints" default="5"/>
+  <arg name="waypoint_radius" default="0.1"/>
+  <arg name="execution_time" default="4.5"/>
+  <arg name="network_delay_milliseconds" default="10"/>
   <node name="wrapper" pkg="gsplines_follow_trajectory" type="follow_joint_trajectory_wrapper" respawn="false" output="screen">
     <param name="action_name" value="follow_joint_gspline"/>
-    <param name="target_action_ns" value="pos_joint_traj_controller"/>
-    <param name="control_step" value="0.01"/>
+    <param name="target_action_ns" value="$(arg control_name)"/>
+    <param name="control_step" value="$(arg control_step)"/>
   </node>
   <node name="motion_generator" pkg="gsplines_follow_trajectory" type="random_minimum_jerk_gsplines" respawn="false" output="screen">
-    <param name="rate" value="0.4"/>
-    <param name="number_of_waypoints" value="5"/>
-    <param name="waypoint_radius" value="0.1"/>
-    <param name="execution_time" value="2.5"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="number_of_waypoints" value="$(arg number_of_waypoints)"/>
+    <param name="waypoint_radius" value="$(arg waypoint_radius)"/>
+    <param name="execution_time" value="$(arg execution_time)"/>
+    <param name="control_name" value="$(arg control_name)"/>
+    <param name="network_delay_milliseconds" value="$(arg network_delay_milliseconds)"/>
   </node>
 </launch>

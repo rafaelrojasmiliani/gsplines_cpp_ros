@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="action_ns"/>
   <arg name="control_name"/>
   <arg name="rate" default="0.4"/>
   <arg name="control_step" default="0.01"/>
   <arg name="number_of_waypoints" default="5"/>
   <arg name="waypoint_radius" default="0.1"/>
   <arg name="execution_time" default="4.5"/>
+  <arg name="network_delay_milliseconds" default="10"/>
   <node name="motion_generator" pkg="gsplines_follow_trajectory" type="random_minimum_jerk_trajectories" respawn="false" output="screen">
     <param name="rate" value="$(arg rate)"/>
     <param name="control_step" value="$(arg control_step)"/>
     <param name="number_of_waypoints" value="$(arg number_of_waypoints)"/>
     <param name="waypoint_radius" value="$(arg waypoint_radius)"/>
     <param name="execution_time" value="$(arg execution_time)"/>
-    <param name="action_ns" value="$(arg action_ns)"/>
     <param name="control_name" value="$(arg control_name)"/>
+    <param name="network_delay_milliseconds" value="$(arg network_delay_milliseconds)"/>
   </node>
 </launch>

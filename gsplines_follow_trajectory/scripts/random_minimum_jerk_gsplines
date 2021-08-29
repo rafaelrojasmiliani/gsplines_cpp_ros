@@ -10,6 +10,7 @@ from gsplines_msgs.msg import FollowJointGSplineGoal
 from gsplines import minimum_jerk_path
 from gsplines_ros import gspline_to_joint_gspline_msg
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
 import actionlib
 from actionlib_msgs.msg import GoalStatus
 
@@ -30,6 +31,15 @@ def get_actual_joint_position(_joint_names: list):
     return np.array([list_of_pairs[name] for name in _joint_names])
 
 
+def get_header_with_delay(_delay_seconds: float):
+    if _delay_seconds < 1.0e-10:
+        return Header()
+    result = Header()
+    result.stamp = rospy.Time.now() + rospy.Duration.from_sec(_delay_seconds)
+
+    return result
+
+
 def main():
     """
     Generic loop
@@ -39,11 +49,11 @@ def main():
     params = {}
     params['rate'] = 0.5
     params['number_of_waypoints'] = 3
-    params['action_ns'] = ''
     params['control_name'] = ''
     params['waypoint_radius'] = 0.05
     params['execution_time'] = 1.0
     params['persistent'] = True
+    params['network_delay_milliseconds'] = 100
 
     for key, value in params.items():
         params[key] = rospy.get_param('~'+key, value)
@@ -54,20 +64,17 @@ def main():
         rospy.logerr_once('no joint names defined on control. cannot proceed')
         return
 
-    motion_action = actionlib.SimpleActionClient(
-        params['action_ns']+'/follow_joint_gspline',
-        FollowJointGSplineAction)
+    motion_action = actionlib.SimpleActionClient('/follow_joint_gspline',
+                                                 FollowJointGSplineAction)
 
-    rospy.loginfo("Waiting for action " +
-                  params['action_ns']+'/follow_joint_gspline')
+    rospy.loginfo("Waiting for action " + '/follow_joint_gspline')
     server_is_up = motion_action.wait_for_server()
     if not server_is_up:
         rospy.logerr_once(
             'No action follow_joint_gspline in namespace \"{:s}\"'.format(
-                params['action_ns']))
+                ''))
         return
-    rospy.loginfo('Connected to the action server ' +
-                  params['action_ns']+'/follow_joint_gspline')
+    rospy.loginfo('Connected to the action server ' + '/follow_joint_gspline')
 
     rate = rospy.Rate(params['rate'])
 
@@ -85,9 +92,12 @@ def main():
         first_motion_waypoints[1, :] = desired_initial_position
         first_motion = minimum_jerk_path(first_motion_waypoints)
 
+        header = get_header_with_delay(
+            params['network_delay_milliseconds']*1.0e-3)
+
         first_goal = FollowJointGSplineGoal()
         first_goal.gspline = gspline_to_joint_gspline_msg(
-            first_motion, joint_names)
+            first_motion, joint_names, header)
 
         goal_state = motion_action.send_goal_and_wait(first_goal)
         initial_position = desired_initial_position
@@ -108,8 +118,11 @@ def main():
         trj = minimum_jerk_path(waypoints)
         trj = trj.linear_scaling_new_execution_time(params['execution_time'])
 
+        header = get_header_with_delay(
+            params['network_delay_milliseconds']*1.0e-3)
+
         goal = FollowJointGSplineGoal()
-        goal.gspline = gspline_to_joint_gspline_msg(trj, joint_names)
+        goal.gspline = gspline_to_joint_gspline_msg(trj, joint_names, header)
 
         goal_state = motion_action.send_goal_and_wait(goal)
 

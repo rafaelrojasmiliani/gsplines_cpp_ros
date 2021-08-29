@@ -42,6 +42,8 @@ void FollowJointTrajectoryActionWrapper::action_callback() {
   const gsplines_msgs::FollowJointGSplineGoalConstPtr goal =
       action_server_->acceptNewGoal();
 
+  desired_motion_start_time_ = goal->gspline.header.stamp;
+
   if (not goal) {
     ROS_ERROR("No goal available");
     return;
