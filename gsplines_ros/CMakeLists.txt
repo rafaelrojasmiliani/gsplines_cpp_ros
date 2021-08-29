@@ -47,6 +47,10 @@ install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 
 catkin_install_python(
-  PROGRAMS scripts/random_minimum_jerk_path_generator scripts/gspline_plotter
-  scripts/gspline_to_joint_trajectory DESTINATION
+  PROGRAMS
+  scripts/random_minimum_jerk_path_generator
+  scripts/gspline_plotter
+  scripts/gspline_dk_path_publisher
+  scripts/gspline_to_joint_trajectory
+  DESTINATION
   ${CATKIN_PACKAGE_BIN_DESTINATION})

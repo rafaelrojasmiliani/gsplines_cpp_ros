@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+import geometry_msgs.msg
+import tf
+from tf.transformations import quaternion_from_matrix
+import math
+import rospy
+from gsplines_msgs.msg import JointGSpline
+from gsplines_msgs.msg import FollowJointGSplineActionGoal
+from geometry_msgs.msg import PoseStamped
+import pinocchio
+from pinocchio import buildModelFromXML
+from pinocchio import forwardKinematics
+from pinocchio import updateFramePlacements
+from gsplines_ros import joint_gspline_msg_to_gspline
+from nav_msgs.msg import Path
+from std_msgs.msg import Header
+import numpy as np
+
+
+class Node:
+    """ Generic node class"""
+
+    def __init__(self):
+        rospy.init_node('gsplines_plotter')
+        self.params = {}
+        self.params['frame'] = "ee_link"
+        self.params['frame_id'] = "base_link"
+        self.params['plot_step'] = 0.1
+        self.params['input_topic'] = "input_gspline"
+
+        for key, value in self.params.items():
+            self.params[key] = rospy.get_param('~'+key, value)
+
+        self.robot_description = rospy.get_param('robot_description')
+        self.model_ = buildModelFromXML(self.robot_description)
+        self.data_ = self.model_.createData()
+
+        self.path_publisher_ = rospy.Publisher('path', Path, queue_size=4)
+        self.subs_1_ = rospy.Subscriber(
+            self.params['input_topic'], JointGSpline, self.callback_msg)
+
+        self.subs_2_ = rospy.Subscriber(
+            "follow_joint_gspline/goal", FollowJointGSplineActionGoal,
+            self.callback_goal)
+
+        self.plot_step_ = self.params['plot_step']
+        self.frame_id_ = self.params['frame_id']
+        self.frame_ = self.params['frame']
+
+    def publish_path(self, _gspline: JointGSpline):
+        trj = joint_gspline_msg_to_gspline(_gspline)
+        domain = trj.get_domain()
+        time_spam = np.arange(
+            domain[0], domain[1]+self.plot_step_, self.plot_step_)
+        trj_evaluated = trj(time_spam)
+
+        path_to_publish = Path()
+        path_to_publish.header = _gspline.header
+        path_to_publish.header.frame_id = self.frame_id_
+
+        for instant, joint_position in zip(time_spam, trj_evaluated):
+            forwardKinematics(self.model_, self.data_, joint_position)
+            updateFramePlacements(self.model_, self.data_)
+
+            transformation_matrix = self.data_.oMf[
+                self.model_.getFrameId(
+                    self.frame_)]
+            aux_hom_matrix = np.eye(4)
+            aux_hom_matrix[:3, :3] = transformation_matrix.rotation
+            quaternion = quaternion_from_matrix(aux_hom_matrix)
+
+            frame_pose = PoseStamped()
+
+            for i, key in enumerate('xyzw'):
+                setattr(frame_pose.pose.orientation, key, quaternion[i])
+            for i, key in enumerate('xyz'):
+                setattr(frame_pose.pose.position, key,
+                        transformation_matrix.translation[i])
+
+            frame_pose.header = Header()
+            frame_pose.header.frame_id = self.frame_id_
+            frame_pose.header.stamp = _gspline.header.stamp + \
+                rospy.Duration.from_sec(instant)
+
+            path_to_publish.poses.append(frame_pose)
+
+        self.path_publisher_.publish(path_to_publish)
+
+    def callback_msg(self, _msg: JointGSpline):
+        """ plot received message"""
+        self.publish_path(_msg)
+
+    def callback_goal(self, _msg: FollowJointGSplineActionGoal):
+        """ plot received message"""
+        self.publish_path(_msg.goal.gspline)
+
+
+if __name__ == '__main__':
+    tr = Node()
+    rospy.spin()
