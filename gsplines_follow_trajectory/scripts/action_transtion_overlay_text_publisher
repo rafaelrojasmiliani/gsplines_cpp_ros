@@ -1,0 +1,84 @@
+#! /usr/bin/env python
+"""
+    Listest to gsplines and plot them
+"""
+from actionlib_msgs.msg import GoalID
+from actionlib_msgs.msg import GoalStatusArray
+from actionlib_msgs.msg import GoalStatus
+from jsk_rviz_plugins.msg import OverlayText
+from std_msgs.msg import ColorRGBA
+
+import rospy
+import numpy as np
+
+
+class Node:
+    """ Generic node class"""
+
+    def __init__(self):
+        rospy.init_node('action_transition_overlay_text_publisher')
+        self.params = {}
+        self.params['action_name'] = "follow_joint_gspline"
+
+        self.subs_ = rospy.Subscriber(
+            self.params['action_name']+'/cancel',
+            GoalID,
+            self.cancel_callback)
+        self.subs_ = rospy.Subscriber(
+            self.params['action_name']+'/status',
+            GoalStatusArray,
+            self.status_callback)
+
+        self.text_publisher_ = rospy.Publisher(
+            'action_text', OverlayText, queue_size=4)
+
+        text = OverlayText()
+        text.left = 700
+        text.top = 10
+        text.text_size = 25
+        text.line_width = 2
+        text.font = 'DejaVu Sans Mono'
+        text.text = ''
+        text.width = 600
+        text.height = 50
+        text.bg_color = ColorRGBA(0.0, 0.0, 0.0, 0.0)
+
+        self.overlay_text_ = text
+        self.prefix_text = '<span style="color: rgb(25,255,240);">' +\
+            'Action State: </span> '
+
+    def status_callback(self, _msg: GoalStatusArray):
+        """ plot received message"""
+        if(len(_msg.status_list) == 0):
+            return
+
+        status_array = {
+            "PENDING": ColorRGBA(128.0/255.0, 128.0/255.0, 128.0/255.0, 1.0),
+            "ACTIVE": ColorRGBA(0.0, 0.0, 255.0/255.0, 1.0),
+            "PREEMPTED": ColorRGBA(255.0/255.0, 102.0/255.0, 0.0, 1.0),
+            "SUCCEEDED": ColorRGBA(0.0, 255.0/255.0, 0.0, 1.0),
+            "ABORTED": ColorRGBA(255.0/255.0, 0.0, 0.0, 1.0),
+            "REJECTED": ColorRGBA(255.0/255.0, 0.0, 0.0, 1.0),
+            "PREEMPTING": ColorRGBA(255.0/255.0, 102.0/255.0, 0.0, 1.0),
+            "RECALLING": ColorRGBA(0.0, 0.0, 255.0/255.0, 1.0),
+            "RECALLED": ColorRGBA(0.0, 0.0, 255.0/255.0, 1.0),
+            "LOST": ColorRGBA(255.0/255.0, 0.0, 0.0, 1.0)}
+        status = _msg.status_list[-1].status
+
+        for status_name, color in status_array.items():
+            if(status == getattr(GoalStatus, status_name)):
+                self.overlay_text_.text = self.prefix_text + \
+                    status_name.lower()
+
+                self.overlay_text_.fg_color = color
+
+        self.text_publisher_.publish(self.overlay_text_)
+
+    def cancel_callback(self, _msg: GoalID):
+        """ plot received message"""
+        pass
+
+
+if __name__ == "__main__":
+    tr = Node()
+    rospy.spin()

@@ -21,7 +21,7 @@ class Node:
     """ Generic node class"""
 
     def __init__(self):
-        rospy.init_node('gsplines_plotter')
+        rospy.init_node('gsplines_path_publisher')
         self.params = {}
         self.params['frame'] = "ee_link"
         self.params['frame_id'] = "base_link"

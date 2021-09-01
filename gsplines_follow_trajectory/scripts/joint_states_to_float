@@ -1,0 +1,52 @@
+#! /usr/bin/env python
+"""
+Reads joint state and publish floats
+"""
+import numpy as np
+import rospy
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Float32
+
+
+class Node:
+    """ Generic node class"""
+
+    def __init__(self):
+        rospy.init_node('joints_to_float')
+        self.params = {}
+        self.params['namespace'] = "joints_as_floats"
+
+        for key, value in self.params.items():
+            self.params[key] = rospy.get_param('~'+key, value)
+
+        joint_state_msg = rospy.wait_for_message(
+            'joint_states', JointState, timeout=rospy.Duration(5.0))
+
+        self.publishers_of_position_ = {}
+        self.publishers_of_velocity_ = {}
+        for joint_name in joint_state_msg.name:
+            self.publishers_of_position_[joint_name] = rospy.Publisher(
+                self.params['namespace']+'/position/'+joint_name,
+                Float32, queue_size=4)
+            self.publishers_of_velocity_[joint_name] = rospy.Publisher(
+                self.params['namespace']+'/velocity/'+joint_name, Float32,
+                queue_size=4)
+
+        self.subs_ = rospy.Subscriber(
+            'joint_states', JointState, self.callback_msg)
+
+        self.my_float_ = Float32()
+
+    def callback_msg(self, _msg: JointState):
+        """ plot received message"""
+
+        for i, joint_name in enumerate(_msg.name):
+            self.my_float_.data = _msg.position[i]
+            self.publishers_of_position_[joint_name].publish(self.my_float_)
+            self.my_float_.data = _msg.velocity[i]
+            self.publishers_of_velocity_[joint_name].publish(self.my_float_)
+
+
+if __name__ == '__main__':
+    tr = Node()
+    rospy.spin()
