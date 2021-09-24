@@ -7,7 +7,7 @@ import numpy as np
 import rospy
 from gsplines_msgs.msg import FollowJointGSplineAction
 from gsplines_msgs.msg import FollowJointGSplineGoal
-from gsplines import minimum_jerk_path
+from gsplines.optimization import minimum_jerk_path
 from gsplines_ros import gspline_to_joint_gspline_msg
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header

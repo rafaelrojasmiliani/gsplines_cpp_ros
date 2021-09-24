@@ -4,7 +4,7 @@
 #include <control_msgs/FollowJointTrajectoryFeedback.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
 #include <control_msgs/FollowJointTrajectoryResult.h>
-#include <gsplines/Basis.hpp>
+#include <gsplines/Basis/Basis.hpp>
 #include <gsplines/Functions/FunctionExpression.hpp>
 #include <gsplines/GSpline.hpp>
 #include <gsplines_msgs/FollowJointGSplineFeedback.h>

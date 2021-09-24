@@ -5,7 +5,7 @@
 import numpy as np
 import rospy
 from control_msgs.msg import FollowJointTrajectoryAction
-from gsplines import minimum_jerk_path
+from gsplines.optimization import minimum_jerk_path
 from gsplines_ros import gspline_to_follow_joint_trajectory_goal
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header

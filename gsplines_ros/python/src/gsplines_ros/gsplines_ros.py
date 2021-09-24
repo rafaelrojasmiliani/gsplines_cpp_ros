@@ -5,7 +5,7 @@ Message conversions for gsplines
 import rospy
 
 import gsplines
-from gsplines import string_to_basis
+from gsplines.basis import string_to_basis
 from trajectory_msgs.msg import JointTrajectoryPoint
 from trajectory_msgs.msg import JointTrajectory
 from control_msgs.msg import FollowJointTrajectoryGoal
