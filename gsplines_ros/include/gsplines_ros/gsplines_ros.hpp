@@ -145,6 +145,37 @@ follow_joint_gspline_result_to_follow_joint_trajectory_result(
 gsplines_msgs::FollowJointGSplineResult
 follow_joint_trajectory_result_to_follow_joint_gspline_result(
     const control_msgs::FollowJointTrajectoryResult &_msg);
+
+Eigen::MatrixXd waypoint_matrix(const trajectory_msgs::JointTrajectory &_msg);
+
+Eigen::VectorXd
+interval_length_vector(const trajectory_msgs::JointTrajectory &_msg);
+
+gsplines::GSpline
+interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
+                             const Eigen::VectorXd &_tau,
+                             const gsplines::basis::Basis &_basis);
+
+gsplines::GSpline
+interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
+                             const gsplines::basis::Basis &_basis);
+
+gsplines::GSpline
+minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
+                          const gsplines::basis::Basis &_basis,
+                          std::vector<std::pair<std::size_t, double>> _weights,
+                          double _exec_time);
+
+trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+    const trajectory_msgs::JointTrajectory &_msg,
+    const gsplines::basis::Basis &_basis,
+    std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
+    const ros::Duration &_step, std_msgs::Header _header);
+
+trajectory_msgs::JointTrajectory
+minimum_jerk_trajectory(const trajectory_msgs::JointTrajectory &_msg,
+                        const ros::Duration &_duration,
+                        const ros::Duration &_step, std_msgs::Header _header);
 } // namespace gsplines_ros
 
 #endif
