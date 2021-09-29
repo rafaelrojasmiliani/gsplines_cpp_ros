@@ -149,6 +149,53 @@ trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
 }
 
 trajectory_msgs::JointTrajectory
+function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
+                                 const std::vector<std::string> &_joint_names,
+                                 const ros::Duration &_step,
+                                 std_msgs::Header _header) {
+
+  trajectory_msgs::JointTrajectory result;
+
+  double t0 = _trj.get_domain().first;
+  double t1 = _trj.get_domain().second;
+
+  std::size_t number_of_segments = _trj.get_domain_length() / _step.toSec();
+
+  Eigen::VectorXd time_spam =
+      Eigen::VectorXd::LinSpaced(number_of_segments + 1, t0, t1);
+
+  gsplines::functions::FunctionExpression gspline_diff_1 = _trj.derivate();
+  gsplines::functions::FunctionExpression gspline_diff_2 = _trj.derivate(2);
+
+  Eigen::MatrixXd gspline_evaluated = _trj(time_spam);
+  Eigen::MatrixXd gspline_diff_1_evaluated = gspline_diff_1(time_spam);
+  Eigen::MatrixXd gspline_diff_2_evaluated = gspline_diff_2(time_spam);
+
+  for (std::size_t uici = 0; uici < gspline_evaluated.rows(); uici++) {
+
+    trajectory_msgs::JointTrajectoryPoint trj_point;
+
+    for (std::size_t uicj = 0; uicj < _trj.get_codom_dim(); uicj++) {
+      trj_point.positions.push_back(gspline_evaluated(uici, uicj));
+
+      trj_point.velocities.push_back(gspline_diff_1_evaluated(uici, uicj));
+
+      trj_point.accelerations.push_back(gspline_diff_2_evaluated(uici, uicj));
+    }
+
+    trj_point.time_from_start = ros::Duration(std::fabs(time_spam(uici) - t0));
+
+    result.points.push_back(std::move(trj_point));
+  }
+
+  result.joint_names = _joint_names;
+
+  result.header = _header;
+
+  return result;
+}
+
+trajectory_msgs::JointTrajectory
 gspline_msg_to_joint_trajectory_msg(const gsplines_msgs::GSpline _trj,
                                     const std::vector<std::string> _joint_names,
                                     const ros::Duration &_step,

@@ -58,6 +58,19 @@ trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
     std_msgs::Header _header = std_msgs::Header());
 
 /**
+ * @brief Converst a function expression into a joint trajectory message
+ *
+ * @param _trj function expression
+ * @param _joint_names joint names
+ * @param _rate control rate/resulution
+ * @param _header header
+ */
+trajectory_msgs::JointTrajectory
+function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
+                                 const std::vector<std::string> &_joint_names,
+                                 const ros::Duration &_rate,
+                                 std_msgs::Header _header = std_msgs::Header());
+/**
  * @brief Converst a gspline message into a joint trajectory message
  *
  * @param _trj Gspline messsage
