@@ -217,6 +217,13 @@ minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
                         const ros::Duration &_step,
                         std_msgs::Header _header = std_msgs::Header());
 
+trajectory_msgs::JointTrajectory
+minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
+                        const std::vector<std::string> _joint_names,
+                        const std::vector<double> _velocity_bound,
+                        const std::vector<double> _acceleration_bound,
+                        const ros::Duration &_step,
+                        std_msgs::Header _header = std_msgs::Header());
 } // namespace gsplines_ros
 
 #endif

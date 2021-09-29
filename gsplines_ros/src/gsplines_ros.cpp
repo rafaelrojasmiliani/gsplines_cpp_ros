@@ -426,4 +426,19 @@ minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
       _velocity_bound, _acceleration_bound, _step, _header);
 }
 
+trajectory_msgs::JointTrajectory
+minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
+                        const std::vector<std::string> _joint_names,
+                        const std::vector<double> _velocity_bound,
+                        const std::vector<double> _acceleration_bound,
+                        const ros::Duration &_step, std_msgs::Header _header) {
+
+  Eigen::VectorXd velocity_bound = Eigen::Map<const Eigen::VectorXd>(
+      _velocity_bound.data(), _velocity_bound.size());
+  Eigen::VectorXd acceleration_bound = Eigen::Map<const Eigen::VectorXd>(
+      _acceleration_bound.data(), _acceleration_bound.size());
+
+  return minimum_jerk_trajectory(_waypoints, _joint_names, velocity_bound,
+                                 acceleration_bound, _step, _header);
+}
 } // namespace gsplines_ros
