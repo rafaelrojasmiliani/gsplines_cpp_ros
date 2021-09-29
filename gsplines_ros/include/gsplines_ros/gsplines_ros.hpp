@@ -180,15 +180,43 @@ minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
                           double _exec_time);
 
 trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
-    const trajectory_msgs::JointTrajectory &_msg,
+    const Eigen::MatrixXd _waypoints,
+    const std::vector<std::string> _joint_names,
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
-    const ros::Duration &_step, std_msgs::Header _header);
+    const ros::Duration &_step, std_msgs::Header _header = std_msgs::Header());
+
+trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+    const Eigen::MatrixXd _waypoints,
+    const std::vector<std::string> _joint_names,
+    const gsplines::basis::Basis &_basis,
+    std::vector<std::pair<std::size_t, double>> _weights,
+    const Eigen::VectorXd _velocity_bound,
+    const Eigen::VectorXd _acceleration_bound, const ros::Duration &_step,
+    std_msgs::Header _header = std_msgs::Header());
+
+trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+    const Eigen::MatrixXd _waypoints,
+    const std::vector<std::string> _joint_names,
+    const gsplines::basis::Basis &_basis,
+    std::vector<std::pair<std::size_t, double>> _weights,
+    const std::vector<double> &_velocity_bound,
+    const std::vector<double> &_acceleration_bound, const ros::Duration &_step,
+    std_msgs::Header _header = std_msgs::Header());
+
+trajectory_msgs::JointTrajectory minimum_jerk_trajectory(
+    const Eigen::MatrixXd _waypoints,
+    const std::vector<std::string> _joint_names, const ros::Duration &_duration,
+    const ros::Duration &_step, std_msgs::Header _header = std_msgs::Header());
 
 trajectory_msgs::JointTrajectory
-minimum_jerk_trajectory(const trajectory_msgs::JointTrajectory &_msg,
-                        const ros::Duration &_duration,
-                        const ros::Duration &_step, std_msgs::Header _header);
+minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
+                        const std::vector<std::string> _joint_names,
+                        const Eigen::VectorXd _velocity_bound,
+                        const Eigen::VectorXd _acceleration_bound,
+                        const ros::Duration &_step,
+                        std_msgs::Header _header = std_msgs::Header());
+
 } // namespace gsplines_ros
 
 #endif
