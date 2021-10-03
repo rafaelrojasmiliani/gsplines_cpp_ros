@@ -390,7 +390,7 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
   result.joint_names = _joint_names;
 
   result.header = _header;
-  return result;
+  return std::move(result);
 }
 
 trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
