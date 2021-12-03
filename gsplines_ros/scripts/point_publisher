@@ -1,0 +1,16 @@
+#!/bin/bash
+main(){
+    rostopic pub /point_stamped geometry_msgs/PointStamped "header:
+      seq: 0
+        stamp:
+            secs: 0
+                nsecs: 0
+                  frame_id: 'panda_hand'
+                  point:
+                    x: 0.0
+                      y: 0.0
+                        z: 0.0" -r 120 &
+
+}
+
+main $@

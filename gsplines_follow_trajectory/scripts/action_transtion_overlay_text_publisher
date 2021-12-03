@@ -2,14 +2,10 @@
 """
     Listest to gsplines and plot them
 """
-from actionlib_msgs.msg import GoalID
-from actionlib_msgs.msg import GoalStatusArray
-from actionlib_msgs.msg import GoalStatus
+import rospy
+from actionlib_msgs.msg import GoalID, GoalStatus, GoalStatusArray
 from jsk_rviz_plugins.msg import OverlayText
 from std_msgs.msg import ColorRGBA
-
-import rospy
-import numpy as np
 
 
 class Node:

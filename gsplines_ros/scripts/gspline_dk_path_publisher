@@ -15,6 +15,20 @@ from gsplines_ros import joint_gspline_msg_to_gspline
 from nav_msgs.msg import Path
 from std_msgs.msg import Header
 import numpy as np
+from sensor_msgs.msg import JointState
+
+
+def get_actual_joint_position():
+    """ get the state of the robot
+    """
+
+    try:
+        joint_state_msg = rospy.wait_for_message(
+            'joint_states', JointState, timeout=rospy.Duration(5.0))
+    except rospy.ROSInterruptException:
+        raise ValueError('cannot get the sate')
+
+    return np.array(joint_state_msg.position), joint_state_msg.name
 
 
 class Node:
@@ -24,16 +38,41 @@ class Node:
         rospy.init_node('gsplines_path_publisher')
         self.params = {}
         self.params['frame'] = "ee_link"
-        self.params['frame_id'] = "base_link"
+        self.params['fixed_frame'] = "base_link"
         self.params['plot_step'] = 0.1
         self.params['input_topic'] = "input_gspline"
+        self.params['control_name'] = ''
 
         for key, value in self.params.items():
             self.params[key] = rospy.get_param('~'+key, value)
 
+        try:
+            self.joint_names_ = rospy.get_param(
+                self.params['control_name']+'/joints')
+        except KeyError:
+            rospy.logerr_once(
+                'no joint names defined on control. cannot proceed')
+            return
+
         self.robot_description = rospy.get_param('robot_description')
         self.model_ = buildModelFromXML(self.robot_description)
         self.data_ = self.model_.createData()
+
+        self.plot_step_ = self.params['plot_step']
+        self.frame_id_ = self.params['fixed_frame']
+        self.frame_ = self.params['frame']
+        self.actual_full_joint_pos_, self.joint_names_full_ = \
+            get_actual_joint_position()
+
+        self.map_partial_to_full_ = []
+        j = 0
+        for i, name in enumerate(self.joint_names_full_):
+            if name == self.joint_names_[j]:
+                self.map_partial_to_full_.append(i)
+                j += 1
+                if j == len(self.joint_names_):
+                    break
+        assert(j == len(self.joint_names_))
 
         self.path_publisher_ = rospy.Publisher('path', Path, queue_size=4)
         self.subs_1_ = rospy.Subscriber(
@@ -42,10 +81,6 @@ class Node:
         self.subs_2_ = rospy.Subscriber(
             "follow_joint_gspline/goal", FollowJointGSplineActionGoal,
             self.callback_goal)
-
-        self.plot_step_ = self.params['plot_step']
-        self.frame_id_ = self.params['frame_id']
-        self.frame_ = self.params['frame']
 
     def publish_path(self, _gspline: JointGSpline):
         trj = joint_gspline_msg_to_gspline(_gspline)
@@ -59,7 +94,9 @@ class Node:
         path_to_publish.header.frame_id = self.frame_id_
 
         for instant, joint_position in zip(time_spam, trj_evaluated):
-            forwardKinematics(self.model_, self.data_, joint_position)
+
+            full_joint_position = self.partial_to_full(joint_position)
+            forwardKinematics(self.model_, self.data_, full_joint_position)
             updateFramePlacements(self.model_, self.data_)
 
             transformation_matrix = self.data_.oMf[
@@ -93,6 +130,13 @@ class Node:
     def callback_goal(self, _msg: FollowJointGSplineActionGoal):
         """ plot received message"""
         self.publish_path(_msg.goal.gspline)
+
+    def partial_to_full(self, _joint_position: np.array):
+        result = self.actual_full_joint_pos_
+        for i, val in enumerate(_joint_position):
+            result[self.map_partial_to_full_[i]] = val
+
+        return result
 
 
 if __name__ == '__main__':
