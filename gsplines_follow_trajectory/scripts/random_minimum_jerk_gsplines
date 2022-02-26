@@ -3,16 +3,33 @@
     This is a generator of minimum jerk motions unsing the follow joint
     trajectory control
 """
+import actionlib
 import numpy as np
 import rospy
-from gsplines_msgs.msg import FollowJointGSplineAction
-from gsplines_msgs.msg import FollowJointGSplineGoal
+from actionlib_msgs.msg import GoalStatus
 from gsplines.optimization import minimum_jerk_path
+from gsplines_msgs.msg import FollowJointGSplineAction, FollowJointGSplineGoal
 from gsplines_ros import gspline_to_joint_gspline_msg
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
-import actionlib
-from actionlib_msgs.msg import GoalStatus
+
+
+def move_robot(_wp: np.array, _motion_action: actionlib.SimpleActionClient,
+               _execution_time: float, _delay_milliseconds: float,
+               _joint_names: list):
+    """
+    Move robot through waypoints using an action client
+    """
+    trj = minimum_jerk_path(_wp)
+    trj = trj.linear_scaling_new_execution_time(_execution_time)
+
+    header = get_header_with_delay(
+        _delay_milliseconds*1.0e-3)
+
+    goal = FollowJointGSplineGoal()
+    goal.gspline = gspline_to_joint_gspline_msg(trj, _joint_names, header)
+
+    return _motion_action.send_goal_and_wait(goal)
 
 
 def get_actual_joint_position(_joint_names: list):
@@ -64,17 +81,18 @@ def main():
         rospy.logerr_once('no joint names defined on control. cannot proceed')
         return
 
-    motion_action = actionlib.SimpleActionClient('/follow_joint_gspline',
+    motion_action = actionlib.SimpleActionClient('follow_joint_gspline',
                                                  FollowJointGSplineAction)
 
-    rospy.loginfo("Waiting for action " + '/follow_joint_gspline')
+    rospy.loginfo("Waiting for action " + 'follow_joint_gspline')
     server_is_up = motion_action.wait_for_server()
     if not server_is_up:
         rospy.logerr_once(
             'No action follow_joint_gspline in namespace \"{:s}\"'.format(
                 ''))
         return
-    rospy.loginfo('Connected to the action server ' + '/follow_joint_gspline')
+    rospy.loginfo('Connected to the action server ' +
+                  rospy.get_namespace() + 'follow_joint_gspline')
 
     rate = rospy.Rate(params['rate'])
 
@@ -115,16 +133,10 @@ def main():
         waypoints[0, :] = initial_position
         waypoints[-1, :] = initial_position
 
-        trj = minimum_jerk_path(waypoints)
-        trj = trj.linear_scaling_new_execution_time(params['execution_time'])
-
-        header = get_header_with_delay(
-            params['network_delay_milliseconds']*1.0e-3)
-
-        goal = FollowJointGSplineGoal()
-        goal.gspline = gspline_to_joint_gspline_msg(trj, joint_names, header)
-
-        goal_state = motion_action.send_goal_and_wait(goal)
+        goal_state = move_robot(waypoints, motion_action,
+                                params['execution_time'],
+                                params['network_delay_milliseconds'],
+                                joint_names)
 
         if goal_state != GoalStatus.SUCCEEDED:
             rospy.logerr('Action did not succeeded :' +
@@ -132,7 +144,13 @@ def main():
             if not params['persistent']:
                 return
 
-        initial_position = get_actual_joint_position(joint_names)
+        actual_position = get_actual_joint_position(joint_names)
+        if np.linalg.norm(actual_position-initial_position) > 0.05:
+            go_back_wp = np.array([actual_position, initial_position])
+            goal_state = move_robot(go_back_wp, motion_action,
+                                    params['execution_time'],
+                                    params['network_delay_milliseconds'],
+                                    joint_names)
 
         rate.sleep()
 
