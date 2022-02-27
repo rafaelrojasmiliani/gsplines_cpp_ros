@@ -53,7 +53,7 @@ def joint_gspline_msg_to_gspline(_msg: JointGSpline):
     interval_lengths = _msg.gspline.interval_lengths
 
     return gsplines.GSpline(domain, codom_dim, number_of_intervals,
-                            basis, coefficients, interval_lengths)
+                            basis, coefficients, interval_lengths, "gspline")
 
 
 def gspline_to_msg(_gspline: gsplines.GSpline):
