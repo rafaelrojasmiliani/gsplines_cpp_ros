@@ -157,10 +157,10 @@ def main():
             if not params['persistent']:
                 return
 
+        rospy.sleep(1)
         actual_position = get_actual_joint_position(joint_names)
         if np.linalg.norm(actual_position-initial_position) > 0.05:
             go_back_wp = np.array([actual_position, initial_position])
-            rospy.sleep(1)
             goal_state = move_robot(go_back_wp, motion_action,
                                     params['execution_time'],
                                     params['network_delay_milliseconds'],
