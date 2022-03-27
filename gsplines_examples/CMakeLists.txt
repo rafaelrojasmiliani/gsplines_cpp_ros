@@ -6,14 +6,16 @@ find_package(catkin REQUIRED COMPONENTS genmsg roscpp rospy std_msgs
 
 find_package(Eigen3 REQUIRED)
 
+find_package(GSplines REQUIRED)
+
 catkin_package(
   # INCLUDE_DIRS include LIBRARIES gsplines_examples CATKIN_DEPENDS genmsg
   # roscpp rospy std_msgs DEPENDS Eigen3
 )
 
-include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS}
+include_directories(${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS} ${gsplines_INCLUDE_DIRS}
                     /usr/include/eigen3/)
 
 add_executable(test_node src/test_node.cpp)
-target_link_libraries(test_node ${catkin_LIBRARIES})
+target_link_libraries(test_node ${catkin_LIBRARIES} ${gsplines_LIBRARIES})
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

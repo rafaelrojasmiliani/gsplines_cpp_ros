@@ -4,7 +4,8 @@ for /F "tokens=1,2,3" %%A in ('netsh interface ip show addresses "vEthernet (Def
 rem START /B C:\"Program Files"\VcXsrv\vcxsrv.exe
 docker pull rafa606/ros_noetic_vim
 docker run -it ^
-        --volume %CD%\..:/workspace ^
+        --volume %CD%\..:/workspace/src ^
         --env="DISPLAY=%xserverip%:0.0" ^
         --entrypoint="/bin/bash" ^
+        --workdir="/workspace" ^
         "rafa606/ros_noetic_vim" -c "addgroup --gid 11021 %USERNAME% --force-badname;  adduser --gecos \"\" --disabled-password  --uid 11021 --gid 11021 %USERNAME% --force-badname --home /home/%USERNAME%; install -d -m 0755 -o %USERNAME% -g 11021 /home/%USERNAME%;  usermod -a -G video %USERNAME%; echo %USERNAME% ALL=\(ALL\) NOPASSWD:ALL >> /etc/sudoers; sudo -EHu %USERNAME%  bash"
