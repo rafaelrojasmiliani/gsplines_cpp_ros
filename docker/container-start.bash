@@ -1,13 +1,11 @@
+
 main(){
-
-
 
     scriptdir=$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)
     if [ "$scriptdir" != "$(pwd)" ]; then
       echo "this script must be executed from $scriptdir".
       exit 1
     fi
-
 
     if lspci | grep -qi "vga .*nvidia" && \
         docker -D info 2>/dev/null | grep -qi "runtimes.* nvidia"; then
@@ -25,46 +23,18 @@ main(){
 
     DOCKER_VIDEO_OPTIONS="${DOCKER_NVIDIA_OPTIONS} --env=DISPLAY --env=QT_X11_NO_MITSHM=1 --env=XAUTHORITY=$XAUTH --volume=$XAUTH:$XAUTH --volume=/tmp/.X11-unix:/tmp/.X11-unix:rw"
 
-    OPTIND=1 
-
-    options=$(getopt -o '' --long "network: " -- "$@")
-
-    eval set -- "$options"
-
-    [ $? -eq 0 ] || { 
-            echo "Incorrect options provided"
-        exit 1
-    }
-
-    if [[ $1 != "--" ]] && [[ $1=="--network" ]]; then
-	    shift
-	    if [[ $1 == "smf" ]]; then
-
-		    DOCKER_NETWORK_OPTIONS="--net=br0 --env=ROS_MASTER_URI=http://10.10.238.1:11311 --env=ROS_IP=10.10.238.5 --ip 10.10.238.5 "
-
-		    if [[ ! $(docker network ls | /bin/grep br0 ) ]]; then
-			    docker network create --driver=bridge --ip-range=10.10.238.0/24 --subnet=10.10.238.0/24 --aux-address='ip1=10.10.238.4' -o "com.docker.network.bridge.name=br0" br0
-		    fi
-	    fi
-	    if [[ $1 == "fhi" ]]; then
-
-		    DOCKER_NETWORK_OPTIONS="--net=br0 --env=ROS_MASTER_URI=http://172.16.0.1:11311 --env=ROS_IP=172.16.0.202 --ip 172.16.0.202"
-
-		    if [[ ! $(docker network ls | /bin/grep br0 ) ]]; then
-			    docker network create --driver=bridge --ip-range=172.16.0.0/24 --subnet=172.16.0.0/24 --aux-address='ip1=172.16.0.201' -o "com.docker.network.bridge.name=br0" br0
-		    fi
-	    fi
-    else
-
-	    DOCKER_NETWORK_OPTIONS="--env=ROS_MASTER_URI=http://127.0.0.1:11311 --env=ROS_MASTER_IP=127.0.0.1 --env=ROS_IP=127.0.0.1" 
-    fi
-
-    docker run -it \
+    myuid=$(id -u $USER)
+    mygid=$(id -g $USER)
+    mygroup=$(id -g -n $USER)
+    myuser="$USER"
+    docker pull rafa606/ros_noetic_vim
+    docker run -it --rm \
         ${DOCKER_VIDEO_OPTIONS} \
-        ${DOCKER_NETWORK_OPTIONS} \
-        --volume $(pwd)/../:/catkinws/src/ \
-        --user $(id -u):$(id -g) \
-        gsplines_cpp_ros bash
+        --volume $(pwd)/../:/workspace: \
+        --entrypoint="/bin/bash" \
+        --privileged \
+        "rafa606/ros_noetic_vim" -c "addgroup --gid ${mygid} ${mygroup} --force-badname;  adduser --gecos \"\" --disabled-password  --uid ${myuid} --gid ${mygid} ${myuser} --force-badname ; usermod -a -G video ${myuser}; echo ${myuser} ALL=\(ALL\) NOPASSWD:ALL >> /etc/sudoers; sudo -EHu ${myuser}  bash"
 }
 
-main $@
+main
+
