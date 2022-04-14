@@ -1,0 +1,41 @@
+name: compilation
+on: push
+jobs:
+  deploy:
+    name: build image
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_WORKSPACE: /workdir
+    container:
+      image: ros:noetic-robot
+      volumes:
+        - ${{ github.workspace }}:/workdir
+    steps:
+      #      - name: checkout code
+      #        uses: actions/checkout@master
+      #        with:
+      #          fetch-depth: 2
+      #          submodules: recursive
+
+      - name: Git Sumbodule Update ad build
+        shell: bash
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Dpkg::Options::="--force-confnew"  git ros-noetic-ifopt wget
+          wget https://github.com/rafaelrojasmiliani/gsplines_cpp/releases/download/package/gsplines-0.0.1-amd64.deb
+          dpkg -i gsplines-0.0.1-amd64.deb
+          mkdir -p catkinws/src
+          git clone https://github.com/rafaelrojasmiliani/gsplines_cpp_ros.git catkinws/src/gsplines_cpp_ros
+          cd catkinws
+          source /opt/ros/noetic/setup.bash
+          catkin build
+
+#      - name: Upload binaries to release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: gsplines_cpp/build/gsplines-0.0.1-amd64.deb
+#          asset_name: gsplines-0.0.1-amd64.deb
+#          tag: package
+#          overwrite: true
+#          body: "Debian pack"
