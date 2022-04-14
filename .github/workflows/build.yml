@@ -24,7 +24,9 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y \
             --no-install-recommends -o Dpkg::Options::="--force-confnew" \
             git ros-noetic-ifopt wget python3-catkin-tools \
-            ros-noetic-control-msgs ros-noetic-velocity-controllers
+            ros-noetic-joint-trajectory-controller \
+            ros-noetic-joint-trajectory-action \
+            ros-noetic-control-msgs
           wget https://github.com/rafaelrojasmiliani/gsplines_cpp/releases/download/package/gsplines-0.0.1-amd64.deb
           dpkg -i gsplines-0.0.1-amd64.deb
           mkdir -p catkinws/src
