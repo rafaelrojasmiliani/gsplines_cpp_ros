@@ -30,11 +30,10 @@ main(){
     docker pull rafa606/ros_noetic_vim
     docker run -it --rm \
         ${DOCKER_VIDEO_OPTIONS} \
-        --volume $(pwd)/../:/workspace: \
+        --volume $(pwd)/../:/workspace/src: \
         --entrypoint="/bin/bash" \
         --privileged \
         "rafa606/ros_noetic_vim" -c "addgroup --gid ${mygid} ${mygroup} --force-badname;  adduser --gecos \"\" --disabled-password  --uid ${myuid} --gid ${mygid} ${myuser} --force-badname ; usermod -a -G video ${myuser}; echo ${myuser} ALL=\(ALL\) NOPASSWD:ALL >> /etc/sudoers; sudo -EHu ${myuser}  bash"
 }
 
 main
-
