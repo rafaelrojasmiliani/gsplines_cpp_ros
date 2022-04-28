@@ -1,3 +1,4 @@
+#include <gsplines/Basis/Basis.hpp>
 #include <gsplines/Basis/BasisLegendre.hpp>
 #include <gsplines/Interpolator.hpp>
 #include <gsplines/Optimization/ipopt_solver.hpp>
@@ -8,10 +9,24 @@
                        _eigen_vector.data() + _eigen_vector.size()))
 namespace gsplines_ros {
 
+std::shared_ptr<gsplines::basis::Basis>
+basis_msg_to_basis(const gsplines_msgs::Basis &_msg) {
+
+  return gsplines::basis::get_basis(_msg.name, _msg.dim, _msg.parameters);
+}
+
+gsplines_msgs::Basis basis_to_basis_msg(const gsplines::basis::Basis &_in) {
+  gsplines_msgs::Basis result;
+  result.name = _in.get_name();
+  result.dim = _in.get_dim();
+  result.parameters = EIGEN_TO_STD_VECTOR(_in.get_parameters());
+  return result;
+}
+
 gsplines::GSpline gspline_msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
 
-  std::unique_ptr<gsplines::basis::Basis> basis =
-      gsplines::basis::string_to_basis(_msg.basis);
+  std::shared_ptr<gsplines::basis::Basis> basis =
+      basis_msg_to_basis(_msg.basis);
 
   std::pair<double, double> domain{_msg.domain_left_boundary,
                                    _msg.domain_right_boundary};
@@ -31,7 +46,7 @@ gsplines::GSpline gspline_msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
 gsplines_msgs::GSpline gspline_to_msg(const gsplines::GSpline &_gspline) {
   gsplines_msgs::GSpline result;
 
-  result.basis = _gspline.get_basis_name();
+  result.basis = basis_to_basis_msg(_gspline.get_basis());
 
   result.domain_left_boundary = _gspline.get_domain().first;
   result.domain_right_boundary = _gspline.get_domain().second;

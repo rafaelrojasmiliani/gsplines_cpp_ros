@@ -7,6 +7,7 @@
 #include <gsplines/Basis/Basis.hpp>
 #include <gsplines/Functions/FunctionExpression.hpp>
 #include <gsplines/GSpline.hpp>
+#include <gsplines_msgs/Basis.h>
 #include <gsplines_msgs/FollowJointGSplineFeedback.h>
 #include <gsplines_msgs/FollowJointGSplineGoal.h>
 #include <gsplines_msgs/FollowJointGSplineResult.h>
@@ -19,6 +20,10 @@
 
 namespace gsplines_ros {
 
+std::shared_ptr<gsplines::basis::Basis>
+basis_msg_to_basis(const gsplines_msgs::Basis &_msg);
+
+gsplines_msgs::Basis basis_to_basis_msg(const gsplines::basis::Basis &_in);
 /**
  * @brief converts a gspline msg into a gspline
  *

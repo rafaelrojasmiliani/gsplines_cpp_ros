@@ -12,7 +12,7 @@ find_package(
              trajectory_msgs
              message_generation)
 
-add_message_files(DIRECTORY msg FILES GSpline.msg JointGSpline.msg)
+add_message_files(DIRECTORY msg FILES GSpline.msg JointGSpline.msg Basis.msg)
 add_action_files(DIRECTORY action FILES FollowJointGSpline.action)
 add_service_files(DIRECTORY srv FILES JointGSplineTrigger.srv
                   GSplineTrigger.srv)

@@ -48,3 +48,7 @@ catkin_install_python(
   scripts/gspline_to_joint_trajectory
   DESTINATION
   ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+if(CATKIN_ENABLE_TESTING)
+  add_subdirectory(test)
+endif()
