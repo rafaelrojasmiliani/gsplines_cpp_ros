@@ -1,0 +1,3 @@
+<launch>
+  <test test-name="node_messages" pkg="gsplines_ros" type="node_messages" />
+</launch>

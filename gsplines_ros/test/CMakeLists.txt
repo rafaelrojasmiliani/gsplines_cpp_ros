@@ -1,11 +1,23 @@
 include(GoogleTest)
+find_package(rostest REQUIRED)
 link_directories(${PROJECT_SOURCE_DIR}/build)
 
 file(GLOB_RECURSE test_list ${PROJECT_SOURCE_DIR}/test/*.cpp)
+file(GLOB_RECURSE node_list ${PROJECT_SOURCE_DIR}/test/node*.cpp)
+foreach(file_path ${node_list})
+  list(REMOVE_ITEM test_list ${file_path})
+endforeach()
 
 foreach(file_path ${test_list})
   get_filename_component(barename ${file_path} NAME)
   string(REPLACE ".cpp" "" new_name ${barename})
   catkin_add_gtest(${new_name} ${file_path})
+  target_link_libraries(${new_name} gsplines_ros ${gsplines_LIBRARIES} gtest)
+endforeach()
+
+foreach(file_path ${node_list})
+  get_filename_component(barename ${file_path} NAME)
+  string(REPLACE ".cpp" "" new_name ${barename})
+  add_rostest_gtest(${new_name} ${new_name}.test ${file_path})
   target_link_libraries(${new_name} gsplines_ros ${gsplines_LIBRARIES} gtest)
 endforeach()
