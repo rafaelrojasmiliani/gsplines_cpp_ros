@@ -38,32 +38,7 @@ gspline_to_joint_gspline_msg(const gsplines::GSpline &_gspline,
                              const std::vector<std::string> &_joint_names);
 
 /**
- * @brief Converst a gsplines into a joint trajectory message
- *
- * @param _trj gsline
- * @param _joint_names joint names
- * @param _rate control rate/resolution
- * @param _header header
- */
-trajectory_msgs::JointTrajectory gspline_to_joint_trajectory_msg(
-    const gsplines::GSpline &_trj, const std::vector<std::string> &_joint_names,
-    const ros::Duration &_rate, std_msgs::Header _header = std_msgs::Header());
-
-/**
- * @brief Converst a function expression into a joint trajectory message
- *
- * @param _trj function expression
- * @param _joint_names joint names
- * @param _rate control rate/resulution
- * @param _header header
- */
-trajectory_msgs::JointTrajectory function_expression_to_joint_trajectory_msg(
-    const gsplines::functions::FunctionExpression &_trj,
-    const std::vector<std::string> &_joint_names, const ros::Duration &_rate,
-    std_msgs::Header _header = std_msgs::Header());
-
-/**
- * @brief Converst a function expression into a joint trajectory message
+ * @brief Converst a function (e.g. a GSpline) into a joint trajectory message
  *
  * @param _trj function expression
  * @param _joint_names joint names
@@ -231,4 +206,12 @@ minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
                         std_msgs::Header _header = std_msgs::Header());
 } // namespace gsplines_ros
 
+bool operator==(const trajectory_msgs::JointTrajectory &_msg,
+                const gsplines::functions::FunctionBase &_fun);
+bool operator!=(const trajectory_msgs::JointTrajectory &_msg,
+                const gsplines::functions::FunctionBase &_fun);
+bool operator==(const gsplines::functions::FunctionBase &_fun,
+                const trajectory_msgs::JointTrajectory &_msg);
+bool operator!=(const gsplines::functions::FunctionBase &_fun,
+                const trajectory_msgs::JointTrajectory &_msg);
 #endif
