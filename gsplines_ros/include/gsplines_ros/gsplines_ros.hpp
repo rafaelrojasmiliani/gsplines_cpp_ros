@@ -73,18 +73,6 @@ trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msg(
     const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_rate);
 
 /**
- * @brief Converts a GSpline into a FollowJointTrajectoryGoal
- *
- * @param _trj gspline
- * @param _joint_names joint names
- * @param _rate control resolution
- * @param _header header
- */
-control_msgs::FollowJointTrajectoryGoal gspline_to_follow_joint_trajectory_goal(
-    const gsplines::GSpline &_trj, const std::vector<std::string> &_joint_names,
-    const ros::Duration &_rate, std_msgs::Header _header = std_msgs::Header());
-
-/**
  * @brief Converst a Function Expression into a FollowJointTrajectoryGoal
  *
  * @param _trj function expression
@@ -93,7 +81,7 @@ control_msgs::FollowJointTrajectoryGoal gspline_to_follow_joint_trajectory_goal(
  * @param _header header
  */
 control_msgs::FollowJointTrajectoryGoal
-function_expression_to_follow_joint_trajectory_goal(
+function_to_follow_joint_trajectory_goal(
     const gsplines::functions::FunctionExpression &_trj,
     const std::vector<std::string> &_joint_names, const ros::Duration &_rate,
     std_msgs::Header _header = std_msgs::Header());
@@ -139,7 +127,7 @@ gsplines_msgs::FollowJointGSplineResult
 follow_joint_trajectory_result_to_follow_joint_gspline_result(
     const control_msgs::FollowJointTrajectoryResult &_msg);
 
-Eigen::MatrixXd waypoint_matrix(const trajectory_msgs::JointTrajectory &_msg);
+Eigen::MatrixXd get_waypoints(const trajectory_msgs::JointTrajectory &_msg);
 
 Eigen::VectorXd
 interval_length_vector(const trajectory_msgs::JointTrajectory &_msg);

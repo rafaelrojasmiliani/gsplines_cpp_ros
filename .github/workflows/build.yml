@@ -27,10 +27,17 @@ jobs:
             ros-noetic-joint-trajectory-controller \
             ros-noetic-joint-trajectory-action \
             ros-noetic-control-msgs
-          wget https://github.com/rafaelrojasmiliani/gsplines_cpp/releases/download/package/gsplines-0.0.1-amd64.deb
-          dpkg -i gsplines-0.0.1-amd64.deb
+          git clone --recursive \
+            https://github.com/rafaelrojasmiliani/gsplines_cpp
+          cd gsplines_cpp
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+          make -j2
+          make install
           mkdir -p catkinws/src
-          git clone https://github.com/rafaelrojasmiliani/gsplines_cpp_ros.git catkinws/src/gsplines_cpp_ros
+          git clone https://github.com/rafaelrojasmiliani/gsplines_cpp_ros.git \
+            catkinws/src/gsplines_cpp_ros
           cd catkinws
           source /opt/ros/noetic/setup.bash
           catkin build

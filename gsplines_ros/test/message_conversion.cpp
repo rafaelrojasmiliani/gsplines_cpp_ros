@@ -68,7 +68,7 @@ TEST(Messages_Conversions, GSpines) {
 }
 
 TEST(Messages_Conversions, Trajectory_Message) {
-  for (std::size_t dim = 4; dim < 17; dim += 2) {
+  for (std::size_t dim = 4; dim < 16; dim += 2) {
     std::size_t codom_dim = uint_dist(mt);
     std::size_t n_intervals = uint_dist(mt);
     Eigen::VectorXd tau(Eigen::VectorXd::Random(n_intervals).array() + 1.5);
@@ -85,11 +85,26 @@ TEST(Messages_Conversions, Trajectory_Message) {
 
     EXPECT_TRUE(curve_1 == function_to_joint_trajectory_msg(
                                curve_1, std::vector<std::string>(codom_dim, ""),
-                               ros::Duration(0.01)));
+                               ros::Duration(0.01)))
+        << "Error at basis dim " << dim;
 
     EXPECT_TRUE(curve_2 != function_to_joint_trajectory_msg(
                                curve_1, std::vector<std::string>(codom_dim, ""),
-                               ros::Duration(0.01)));
+                               ros::Duration(0.01)))
+        << "Error at basis dim " << dim;
+
+    EXPECT_TRUE(curve_1 == gspline_msg_to_joint_trajectory_msg(
+                               gspline_to_msg(curve_1),
+                               std::vector<std::string>(codom_dim, ""),
+                               ros::Duration(0.01)))
+        << "Error at basis dim " << dim;
+
+    EXPECT_TRUE(curve_1 ==
+                joint_gspline_msg_to_joint_trajectory_msg(
+                    gspline_to_joint_gspline_msg(
+                        curve_1, std::vector<std::string>(codom_dim, "")),
+                    ros::Duration(0.01)))
+        << "Error at basis dim " << dim;
   }
 }
 
