@@ -4,51 +4,29 @@ jobs:
   deploy:
     name: build image
     runs-on: ubuntu-latest
-    env:
-      GITHUB_WORKSPACE: /workdir
-    container:
-      image: ros:noetic-robot
-      volumes:
-        - ${{ github.workspace }}:/workdir
     steps:
-      #      - name: checkout code
-      #        uses: actions/checkout@master
-      #        with:
-      #          fetch-depth: 2
-      #          submodules: recursive
+      - name: checkout code
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 2
+          submodules: recursive
 
-      - name: Git Sumbodule Update ad build
-        shell: bash
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            --no-install-recommends -o Dpkg::Options::="--force-confnew" \
-            git ros-noetic-ifopt wget python3-catkin-tools \
-            ros-noetic-joint-trajectory-controller \
-            ros-noetic-joint-trajectory-action \
-            ros-noetic-control-msgs
-          source /opt/ros/noetic/setup.bash
-          git clone --recursive \
-            https://github.com/rafaelrojasmiliani/gsplines_cpp
-          cd gsplines_cpp
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-          make -j2
-          make install
-          mkdir -p catkinws/src
-          git clone https://github.com/rafaelrojasmiliani/gsplines_cpp_ros.git \
-            catkinws/src/gsplines_cpp_ros
-          cd catkinws
-          source /opt/ros/noetic/setup.bash
-          catkin build
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-#      - name: Upload binaries to release
-#        uses: svenstaro/upload-release-action@v2
-#        with:
-#          repo_token: ${{ secrets.GITHUB_TOKEN }}
-#          file: gsplines_cpp/build/gsplines-0.0.1-amd64.deb
-#          asset_name: gsplines-0.0.1-amd64.deb
-#          tag: package
-#          overwrite: true
-#          body: "Debian pack"
+      - name: build and push vim ros noetic with gsplines
+        uses: docker/build-push-action@v2
+        with:
+          tags: rafa606/vim-ros-noetic-gsplines-ros
+          file: docker/noetic_ros.dockerfile
+          push: true
+
+      - name: build and push vim ros melodic with gsplines
+        uses: docker/build-push-action@v2
+        with:
+          tags: rafa606/vim-ros-melodic-gsplines-ros
+          file: docker/melodic_ros.dockerfile
+          push: true
