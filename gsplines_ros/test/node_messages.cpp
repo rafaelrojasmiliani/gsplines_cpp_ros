@@ -24,7 +24,7 @@ using namespace gsplines_ros;
 std::random_device rd;
 std::mt19937 mt(rd());
 std::uniform_int_distribution<std::size_t> uint_dist(2, 9);
-
+// Function to generate random strings
 std::string get_random_string(const int len) {
   static const char alphanum[] = "0123456789"
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -106,7 +106,7 @@ TEST(GSplines_Messages, BasisLegendre) {
 TEST(TestSuite, testCase2) {
 
   ros::NodeHandle nh;
-  ros::Publisher pub = nh.advertise<gsplines_msgs::JointGSpline>("gspline", 1);
+  ros::Publisher pub = nh.advertise<gsplines_msgs::GSpline>("gspline", 1);
   std::shared_ptr<GSpline> gspline_received = nullptr;
   ros::Subscriber sub = nh.subscribe<gsplines_msgs::GSpline>(
       "gspline", 0,
@@ -134,7 +134,7 @@ TEST(TestSuite, testCase2) {
       ros::spinOnce();
       ros::WallDuration(0.01).sleep();
       if (gspline_received) {
-        // EXPECT_TRUE(*gspline_received == curve_1);
+         EXPECT_TRUE(*gspline_received == curve_1);
       }
       counter++;
     }
