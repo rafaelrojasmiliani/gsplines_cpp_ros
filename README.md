@@ -11,14 +11,17 @@ Implementation of the [gsplines](https://github.com/rafaelrojasmiliani/gsplines_
 
 # Installation
 
-## In ubuntu with ROS noetic
+## In ubuntu with ROS
 
 1. Install dependencies
 ```
 apt-get update
-apt-get install ros-noetic-ifopt python3-matplotlib
-wget https://github.com/rafaelrojasmiliani/gsplines_cpp/releases/download/package/gsplines-0.0.1-amd64.deb
-dpkg -i gsplines-0.0.1-amd64.deb
+apt-get install ros-${ROS_DISTRO}-ifopt python3-matplotlib libgtest-dev cmake libeigen3-dev coinor-libipopt-dev
+```
+2. Install the GSplines
+```
+source /opt/ros/${ROS_DISTRO}/setup.bash && git clone --recursive https://github.com/rafaelrojasmiliani/gsplines_cpp.git ~/gsplines && cd ~/gsplines && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr && make && make install \
+   && rm -rf ~/gsplines
 ```
 
-2. Download this repo and `catkin build`
+3. Download this repo to your workspace and `catkin build`, or install
