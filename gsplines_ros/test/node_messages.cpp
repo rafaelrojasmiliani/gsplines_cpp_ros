@@ -103,18 +103,19 @@ TEST(GSplines_Messages, BasisLegendre) {
 }
 
 // Test that GSplines with lagrange basis are sent correctly
-TEST(TestSuite, testCase2) {
+TEST(Message_Middleware, testCase2) {
 
   ros::NodeHandle nh;
   ros::Publisher pub = nh.advertise<gsplines_msgs::GSpline>("gspline", 1);
-  std::shared_ptr<GSpline> gspline_received = nullptr;
-  ros::Subscriber sub = nh.subscribe<gsplines_msgs::GSpline>(
-      "gspline", 0,
-      [&gspline_received](const gsplines_msgs::GSplineConstPtr &_msg) -> void {
-        gspline_received =
-            std::make_shared<GSpline>(gspline_msg_to_gspline(*_msg));
-      });
   for (std::size_t dim = 4; dim < 17; dim += 2) {
+    std::shared_ptr<GSpline> gspline_received = nullptr;
+    ros::Subscriber sub = nh.subscribe<gsplines_msgs::GSpline>(
+        "gspline", 0,
+        [&gspline_received](
+            const gsplines_msgs::GSplineConstPtr &_msg) -> void {
+          gspline_received =
+              std::make_shared<GSpline>(gspline_msg_to_gspline(*_msg));
+        });
     std::size_t codom_dim = uint_dist(mt);
     std::vector<std::string> joint_names;
     for (std::size_t i = 0; i < codom_dim; i++) {
@@ -134,7 +135,46 @@ TEST(TestSuite, testCase2) {
       ros::spinOnce();
       ros::WallDuration(0.01).sleep();
       if (gspline_received) {
-         EXPECT_TRUE(*gspline_received == curve_1);
+        EXPECT_TRUE(*gspline_received == curve_1);
+      }
+      counter++;
+    }
+  }
+}
+
+// Test that GSplines with legendre basis are sent correctly
+TEST(Message_Middleware, GSpline_Legendre) {
+
+  ros::NodeHandle nh;
+  ros::Publisher pub = nh.advertise<gsplines_msgs::GSpline>("gspline", 1);
+  for (std::size_t dim = 4; dim < 17; dim += 2) {
+    std::shared_ptr<GSpline> gspline_received = nullptr;
+    ros::Subscriber sub = nh.subscribe<gsplines_msgs::GSpline>(
+        "gspline", 0,
+        [&gspline_received](
+            const gsplines_msgs::GSplineConstPtr &_msg) -> void {
+          gspline_received =
+              std::make_shared<GSpline>(gspline_msg_to_gspline(*_msg));
+        });
+    std::size_t codom_dim = uint_dist(mt);
+    std::vector<std::string> joint_names;
+    for (std::size_t i = 0; i < codom_dim; i++) {
+      joint_names.push_back(get_random_string(5));
+    }
+    std::size_t n_intervals = uint_dist(mt);
+    Eigen::VectorXd tau(Eigen::VectorXd::Random(n_intervals).array() + 1.5);
+    Eigen::MatrixXd waypoints(
+        Eigen::MatrixXd::Random(n_intervals + 1, codom_dim));
+    // test Lagrange
+    std::shared_ptr<BasisLegendre> bais_legendre = BasisLegendre::get(dim);
+    GSpline curve_1 = interpolate(tau, waypoints, *bais_legendre);
+    int counter = 0;
+    while (ros::ok() and counter < 30) {
+      pub.publish(gspline_to_msg(curve_1));
+      ros::spinOnce();
+      ros::WallDuration(0.01).sleep();
+      if (gspline_received) {
+        EXPECT_TRUE(*gspline_received == curve_1);
       }
       counter++;
     }

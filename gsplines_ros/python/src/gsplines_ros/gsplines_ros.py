@@ -5,23 +5,54 @@ Message conversions for gsplines
 import rospy
 
 import gsplines
-from gsplines.basis import string_to_basis
+from gsplines.basis import get_basis
 from trajectory_msgs.msg import JointTrajectoryPoint
 from trajectory_msgs.msg import JointTrajectory
 from control_msgs.msg import FollowJointTrajectoryGoal
 
 from std_msgs.msg import Header
 
-from gsplines_msgs.msg import GSpline, JointGSpline
+from gsplines_msgs.msg import GSpline, JointGSpline, Basis
 import numpy as np
 from typing import List
 
 
-def gspline_msg_to_gspline(_msg: GSpline):
+def basis_msg_to_basis(_msg: Basis) -> gsplines.basis.Basis:
+    a = gsplines.basis.get_basis(_msg.name, _msg.dim, _msg.parameters)
+    return a
+
+
+def basis_to_basis_msg(_basis: gsplines.basis.Basis) -> Basis:
+    result = Basis()
+    result.name = _basis.get_name()
+    result.dim = _basis.get_dim()
+    result.parameters = _basis.get_parameters()
+    return result
+
+
+def gspline_to_msg(_gspline: gsplines.GSpline):
+    """ GSpline message to GSpline message """
+    result = GSpline()
+
+    result.basis = basis_to_basis_msg(_gspline.get_basis())
+
+    result.domain_left_boundary = _gspline.get_domain()[0]
+    result.domain_right_boundary = _gspline.get_domain()[1]
+
+    result.codom_dim = _gspline.get_codom_dim()
+
+    result.number_of_intervals = _gspline.get_number_of_intervals()
+
+    result.coefficients = _gspline.get_coefficients().copy()
+    result.interval_lengths = _gspline.get_interval_lengths().copy()
+
+    return result
+
+
+def gspline_msg_to_gspline(_msg: GSpline) -> gsplines.GSpline:
     """ GSpline message to GSpline """
 
-    basis = string_to_basis(_msg.basis)
-
+    basis = basis_msg_to_basis(_msg.basis)
     domain = (_msg.domain_left_boundary, _msg.domain_right_boundary)
 
     codom_dim = _msg.codom_dim
@@ -33,13 +64,13 @@ def gspline_msg_to_gspline(_msg: GSpline):
     interval_lengths = _msg.interval_lengths
 
     return gsplines.GSpline(domain, codom_dim, number_of_intervals,
-                            basis, coefficients, interval_lengths)
+                            basis, coefficients, interval_lengths, "gspline")
 
 
-def joint_gspline_msg_to_gspline(_msg: JointGSpline):
+def joint_gspline_msg_to_gspline(_msg: JointGSpline) -> gsplines.GSpline:
     """ Joint GSpline message to GSpline """
 
-    basis = string_to_basis(_msg.gspline.basis)
+    basis = get_basis(_msg.basis.name, _msg.basis.dim, _msg.basis.parameters)
 
     domain = (_msg.gspline.domain_left_boundary,
               _msg.gspline.domain_right_boundary)
@@ -54,25 +85,6 @@ def joint_gspline_msg_to_gspline(_msg: JointGSpline):
 
     return gsplines.GSpline(domain, codom_dim, number_of_intervals,
                             basis, coefficients, interval_lengths, "gspline")
-
-
-def gspline_to_msg(_gspline: gsplines.GSpline):
-    """ GSpline message to GSpline message """
-    result = GSpline()
-
-    result.basis = _gspline.get_basis_name()
-
-    result.domain_left_boundary = _gspline.get_domain()[0]
-    result.domain_right_boundary = _gspline.get_domain()[1]
-
-    result.codom_dim = _gspline.get_codom_dim()
-
-    result.number_of_intervals = _gspline.get_number_of_intervals()
-
-    result.coefficients = _gspline.get_coefficients().copy()
-    result.interval_lengths = _gspline.get_interval_lengths().copy()
-
-    return result
 
 
 def gspline_to_joint_gspline_msg(_gspline: gsplines.GSpline,
