@@ -1,6 +1,23 @@
 #! /usr/bin/env python
 """
-    This is a generator of minimum jerk paths
+    This Example teach to implement a Minimum jerk trajectory with 
+    a FollowJointTrajectoryAction.
+    It does the following procedure
+    0. Connects with the action server
+    1. Get the actual position of the robot
+    2. Compute a small minimum jerk random motion that starts and arrives to
+       the actual position of the robot. This returns a gspline
+    3. Scale the time execution of the gspline.
+    4. Convert the gspline into a follow joint trajectory goal
+    5. Sends the joint trajectory goal to the robot.
+
+    This example has three main components
+    1. Defaul instantiaion of the ROS enviromment
+        - Parameters 
+        - Connection to FollowJointTrajectoryAction
+    2. Feedback from the robot to get the actual position and compute a small
+        random motion which starts and ends at this position
+    3. Gspline computation and conversion
 """
 import numpy as np
 import rospy
@@ -60,12 +77,14 @@ def main():
     # 1. Initialize parameters
     # ------------------------------
     params = {}
-    params['control_step'] = 0.01  # resolution of the control
+    # resolution of the control (time steps in FollowJointTrajectory)
+    params['control_step'] = 0.01
     params['number_of_waypoints'] = 3
     # name of the control that implement follow_joint_trajectory
+    # (its namespace)
     params['control_name'] = ''
     params['waypoint_radius'] = 0.05  # magnitute of the random motion
-    params['execution_time'] = 1.0
+    params['execution_time'] = 1.0  # time to execute the motion
     # delay of the network. Motion will start from after such a time has passed
     params['network_delay_milliseconds'] = 100
 
