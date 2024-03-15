@@ -312,7 +312,6 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const Eigen::VectorXd _acceleration_bound, const ros::Duration &_step,
     std_msgs::Header _header) {
 
-  ROS_INFO("0");
   trajectory_msgs::JointTrajectory result;
 
   gsplines::GSpline trj = gsplines::optimization::optimal_sobolev_norm(
@@ -325,7 +324,6 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
   Eigen::VectorXd time_spam =
       Eigen::VectorXd::LinSpaced(number_of_segments + 1, t0, t1);
 
-  ROS_INFO("a");
   gsplines::functions::FunctionExpression gspline_diff_1 = trj.derivate();
   gsplines::functions::FunctionExpression gspline_diff_2 = trj.derivate(2);
 
@@ -333,19 +331,16 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
   Eigen::MatrixXd gspline_diff_1_evaluated = gspline_diff_1(time_spam);
   Eigen::MatrixXd gspline_diff_2_evaluated = gspline_diff_2(time_spam);
 
-  ROS_INFO("b");
   double max_velocity_ratio =
       (gspline_diff_1_evaluated.array().abs().colwise().maxCoeff() /
        _velocity_bound.transpose().array())
           .maxCoeff();
 
-  ROS_INFO("c");
   double max_acceleration_ratio =
       Eigen::sqrt(gspline_diff_2_evaluated.array().abs().colwise().maxCoeff() /
                   _acceleration_bound.transpose().array())
           .maxCoeff();
 
-  ROS_INFO("d");
   double time_scale_factor =
       std::max(max_velocity_ratio, max_acceleration_ratio);
 
