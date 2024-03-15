@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <eigen3/Eigen/Core>
+#include <gsplines/Basis/Basis0101.hpp>
 #include <gsplines/Basis/BasisLagrange.hpp>
 #include <gsplines/Basis/BasisLegendre.hpp>
 #include <gsplines/Collocation/GaussLobattoPointsWeights.hpp>
@@ -31,6 +32,10 @@ TEST(Messages_Conversions, Basis) {
     std::shared_ptr<BasisLegendre> basis_legendre = BasisLegendre::get(dim);
     EXPECT_TRUE(*basis_legendre ==
                 *basis_msg_to_basis(basis_to_basis_msg(*basis_legendre)));
+    // test basis0101
+    std::shared_ptr<Basis0101> basis_0101 = Basis0101::get(dim);
+    EXPECT_TRUE(*basis_0101 ==
+                *basis_msg_to_basis(basis_to_basis_msg(*basis_0101)));
 
     EXPECT_FALSE(*basis_legendre == *basis_lagrange);
     EXPECT_TRUE(*basis_legendre != *basis_lagrange);
@@ -57,6 +62,12 @@ TEST(Messages_Conversions, GSpines) {
     GSpline curve_3 = interpolate(tau, waypoints, *basis_legendre);
     GSpline curve_4 = gspline_msg_to_gspline(gspline_to_msg(curve_3));
     EXPECT_TRUE(tools::approx_equal(curve_3, curve_4, 1.0e-8));
+
+    // test basis0101
+    std::shared_ptr<Basis0101> basis_0101 = Basis0101::get(dim);
+    GSpline curve0101_3 = interpolate(tau, waypoints, *basis_legendre);
+    GSpline curve0101_4 = gspline_msg_to_gspline(gspline_to_msg(curve0101_3));
+    EXPECT_TRUE(tools::approx_equal(curve0101_3, curve0101_4, 1.0e-8));
 
     // test goint gsplines
     GSpline curve_5 = gspline_msg_to_gspline(
