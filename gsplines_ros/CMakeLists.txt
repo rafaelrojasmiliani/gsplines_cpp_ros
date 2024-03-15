@@ -3,7 +3,8 @@ project(gsplines_ros)
 
 add_compile_options(-std=c++17)
 
-find_package(catkin REQUIRED COMPONENTS roscpp rospy gsplines_msgs)
+find_package(catkin REQUIRED COMPONENTS pybind11_catkin roscpp rospy
+                                        gsplines_msgs)
 
 find_package(Eigen3 REQUIRED)
 
