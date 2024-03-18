@@ -14,6 +14,7 @@
 #include <gsplines_msgs/GSpline.h>
 #include <gsplines_msgs/JointGSpline.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <trajectory_msgs/JointTrajectory.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
@@ -161,6 +162,7 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     std::vector<std::pair<std::size_t, double>> _weights,
     const Eigen::VectorXd _velocity_bound,
     const Eigen::VectorXd _acceleration_bound, const ros::Duration &_step,
+    const std::optional<double> &_exec_time = std::nullopt,
     std_msgs::Header _header = std_msgs::Header());
 
 trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
@@ -170,6 +172,7 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     std::vector<std::pair<std::size_t, double>> _weights,
     const std::vector<double> &_velocity_bound,
     const std::vector<double> &_acceleration_bound, const ros::Duration &_step,
+    const std::optional<double> &_exec_time = std::nullopt,
     std_msgs::Header _header = std_msgs::Header());
 
 trajectory_msgs::JointTrajectory minimum_jerk_trajectory(

@@ -309,13 +309,16 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights,
     const Eigen::VectorXd _velocity_bound,
-    const Eigen::VectorXd _acceleration_bound, const ros::Duration &_step,
+    const Eigen::VectorXd _acceleration_bound, //
+    const ros::Duration &_step,                //
+    const std::optional<double> &_exec_time,   //
     std_msgs::Header _header) {
 
   trajectory_msgs::JointTrajectory result;
 
   gsplines::GSpline trj = gsplines::optimization::optimal_sobolev_norm(
-      _waypoints, _basis, _weights, _waypoints.rows() - 1);
+      _waypoints, _basis, _weights,
+      _exec_time.has_value() ? _exec_time.value() : _waypoints.rows() - 1);
 
   std::size_t number_of_segments = trj.get_domain_length() / _step.toSec();
 
@@ -376,7 +379,9 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights,
     const std::vector<double> &_velocity_bound,
-    const std::vector<double> &_acceleration_bound, const ros::Duration &_step,
+    const std::vector<double> &_acceleration_bound, //
+    const ros::Duration &_step,
+    const std::optional<double> &_exec_time, //
     std_msgs::Header _header) {
 
   Eigen::VectorXd velocity_bound = Eigen::Map<const Eigen::VectorXd>(
@@ -387,7 +392,7 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
 
   return minimum_sobolev_semi_norm_joint_trajectory(
       _waypoints, _joint_names, _basis, _weights, velocity_bound,
-      acceleration_bound, _step, _header);
+      acceleration_bound, _step, _exec_time, _header);
 }
 
 trajectory_msgs::JointTrajectory
@@ -410,7 +415,7 @@ minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
 
   return minimum_sobolev_semi_norm_joint_trajectory(
       _waypoints, _joint_names, gsplines::basis::BasisLegendre(6), {{3, 1.0}},
-      _velocity_bound, _acceleration_bound, _step, _header);
+      _velocity_bound, _acceleration_bound, _step, std::nullopt, _header);
 }
 
 trajectory_msgs::JointTrajectory
