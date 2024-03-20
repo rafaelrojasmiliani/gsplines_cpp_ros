@@ -39,6 +39,18 @@ gspline_to_joint_gspline_msg(const gsplines::GSpline &_gspline,
                              const std::vector<std::string> &_joint_names);
 
 /**
+ * @brief Converst a GSpline into a joint trajectory message what just contains
+ * the waypoints and the time intervals lengths.
+ *
+ * @param _trj function expression
+ * @param _joint_names joint names
+ * @param _rate control rate/resulution
+ * @param _header header
+ */
+trajectory_msgs::JointTrajectory gspline_to_minimal_joint_trajectory_msg(
+    const gsplines::GSpline &_trj, const std::vector<std::string> &_joint_names,
+    std_msgs::Header _header = std_msgs::Header());
+/**
  * @brief Converst a function (e.g. a GSpline) into a joint trajectory message
  *
  * @param _trj function expression
