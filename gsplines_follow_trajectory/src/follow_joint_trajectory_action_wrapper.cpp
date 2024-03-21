@@ -3,22 +3,21 @@
 #include <gsplines_follow_trajectory/follow_joint_trajectory_action_wrapper.hpp>
 #include <gsplines_msgs/FollowJointGSplineResult.h>
 #include <gsplines_ros/gsplines_ros.hpp>
-#include <map>
-#include <variant>
 
 namespace gsplines_follow_trajectory {
+const std::string LOGNAME("GSplineFollowJointTrajectoryActionWrapper");
 
 FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
-    const std::string &_name, const std::string &_fjta_name,
+    const std::string &_gspline_action_name, const std::string &_fjta_name,
     double _control_step)
-    : nh_(), nh_prv_("~"), name_(_name), fjta_name_(_fjta_name),
-      action_server_(
-          std::make_unique<actionlib::SimpleActionServer<
-              gsplines_msgs::FollowJointGSplineAction>>(_name, false)),
+    : nh_(), nh_prv_("~"), gspline_action_name_(_gspline_action_name),
+      fjta_name_(_fjta_name), control_step_(_control_step),
+      action_server_(std::make_unique<actionlib::SimpleActionServer<
+                         gsplines_msgs::FollowJointGSplineAction>>(
+          nh_, _fjta_name + "/" + gspline_action_name_, false)),
       action_client_(std::make_unique<actionlib::SimpleActionClient<
                          control_msgs::FollowJointTrajectoryAction>>(
-          nh_, _fjta_name + "/follow_joint_trajectory", true)),
-      control_step_(_control_step) {
+          nh_, _fjta_name + "/follow_joint_trajectory", true)) {
 
   action_server_->registerPreemptCallback(boost::bind(
       &FollowJointTrajectoryActionWrapper::prehemption_action, this));
@@ -26,11 +25,24 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
   action_server_->registerGoalCallback(
       boost::bind(&FollowJointTrajectoryActionWrapper::action_callback, this));
 
-  ROS_INFO("Waiting for action %s",
-           (_fjta_name + "/follow_joint_trajectory").c_str());
+  std::string absolute_namespace = nh_.getNamespace();
+  if (absolute_namespace !=
+      "/") {                   // Check if we are not in the global namespace.
+    absolute_namespace += "/"; // Ensure there is a trailing slash.
+  }
+
+  ROS_INFO_STREAM_NAMED(LOGNAME, "Waiting for action "
+                                     << absolute_namespace + _fjta_name +
+                                            "/follow_joint_trajectory");
+
   if (action_client_->waitForServer(ros::Duration(60.0))) {
-    ROS_INFO("Starting action server %s", name_.c_str());
+    ROS_INFO("Starting action server %s", gspline_action_name_.c_str());
     action_server_->start();
+    ROS_INFO_NAMED(LOGNAME, "Action found.");
+  } else {
+    ROS_ERROR_STREAM_NAMED(LOGNAME,
+                           "Could not find action "
+                               << _fjta_name + "/follow_joint_trajectory");
   }
 }
 

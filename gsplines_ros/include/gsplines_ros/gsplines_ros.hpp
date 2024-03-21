@@ -1,24 +1,36 @@
 
 #ifndef GSPLINES_TOOLS
 #define GSPLINES_TOOLS
+
 #include <control_msgs/FollowJointTrajectoryFeedback.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
 #include <control_msgs/FollowJointTrajectoryResult.h>
+
 #include <gsplines/Basis/Basis.hpp>
+#include <gsplines/Functions/FunctionBase.hpp>
 #include <gsplines/Functions/FunctionExpression.hpp>
 #include <gsplines/GSpline.hpp>
+
 #include <gsplines_msgs/Basis.h>
 #include <gsplines_msgs/FollowJointGSplineFeedback.h>
 #include <gsplines_msgs/FollowJointGSplineGoal.h>
 #include <gsplines_msgs/FollowJointGSplineResult.h>
 #include <gsplines_msgs/GSpline.h>
 #include <gsplines_msgs/JointGSpline.h>
+
+#include <trajectory_msgs/JointTrajectory.h>
+
+#include <std_msgs/Header.h>
+
+#include <ros/duration.h>
+
+#include <cmath>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <trajectory_msgs/JointTrajectoryPoint.h>
-
+#include <utility>
+#include <vector>
 namespace gsplines_ros {
 
 std::shared_ptr<gsplines::basis::Basis>
@@ -61,7 +73,7 @@ trajectory_msgs::JointTrajectory gspline_to_minimal_joint_trajectory_msg(
 trajectory_msgs::JointTrajectory
 function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
                                  const std::vector<std::string> &_joint_names,
-                                 const ros::Duration &_rate,
+                                 const ros::Duration &_step,
                                  std_msgs::Header _header = std_msgs::Header());
 /**
  * @brief Converst a gspline message into a joint trajectory message
@@ -83,7 +95,7 @@ trajectory_msgs::JointTrajectory gspline_msg_to_joint_trajectory_msg(
  * @param _rate control resolution
  */
 trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msg(
-    const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_rate);
+    const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_step);
 
 /**
  * @brief Converst a Function Expression into a FollowJointTrajectoryGoal
@@ -161,8 +173,7 @@ minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
                           double _exec_time);
 
 trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
-    const Eigen::MatrixXd _waypoints,
-    const std::vector<std::string> _joint_names,
+    Eigen::MatrixXd _waypoints, std::vector<std::string> _joint_names,
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
     const ros::Duration &_step, std_msgs::Header _header = std_msgs::Header());

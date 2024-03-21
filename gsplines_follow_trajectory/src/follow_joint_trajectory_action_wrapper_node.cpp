@@ -3,6 +3,15 @@
 
 #include <gsplines_follow_trajectory/follow_joint_trajectory_action_wrapper.hpp>
 
+//// Params
+///
+/// - control_step: double value that sets the time step used to generate the
+///   trajectory message from a gspline
+///
+/// - action_name: name of the action that this node will open
+///
+///
+/// - target_action_ns
 int main(int argc, char **argv) {
 
   ros::init(argc, argv, "wrapper");

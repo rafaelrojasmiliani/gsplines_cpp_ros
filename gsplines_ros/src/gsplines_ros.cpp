@@ -1,47 +1,80 @@
 #include <gsplines/Basis/Basis.hpp>
 #include <gsplines/Basis/BasisLegendre.hpp>
+#include <gsplines/Functions/FunctionBase.hpp>
+#include <gsplines/GSpline.hpp>
 #include <gsplines/Interpolator.hpp>
 #include <gsplines/Optimization/ipopt_solver.hpp>
 #include <gsplines/Tools.hpp>
 #include <gsplines_ros/gsplines_ros.hpp>
-#include <ros/ros.h>
+
+#include <gsplines_msgs/Basis.h>
+#include <gsplines_msgs/FollowJointGSplineActionGoal.h>
+#include <gsplines_msgs/FollowJointGSplineActionResult.h>
+#include <gsplines_msgs/GSpline.h>
+#include <gsplines_msgs/JointGSpline.h>
+
+#include <ros/console.h>
+#include <ros/duration.h>
+#include <ros/time.h>
+
+#include <std_msgs/Header.h>
+
+#include <trajectory_msgs/JointTrajectory.h>
+#include <trajectory_msgs/JointTrajectoryPoint.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <control_msgs/FollowJointTrajectoryFeedback.h>
+#include <control_msgs/FollowJointTrajectoryGoal.h>
+#include <control_msgs/FollowJointTrajectoryResult.h>
+
 #define EIGEN_TO_STD_VECTOR(_eigen_vector)                                     \
   (std::vector<double>(_eigen_vector.data(),                                   \
-                       _eigen_vector.data() + _eigen_vector.size()))
+                       _eigen_vector.data() + _eigen_vector.size())) // NOLINT
 namespace gsplines_ros {
 
 std::shared_ptr<gsplines::basis::Basis>
 basis_msg_to_basis(const gsplines_msgs::Basis &_msg) {
 
+  ROS_WARN_STREAM("gegin base " << _msg.name);
   return gsplines::basis::get_basis(_msg.name, _msg.dim, _msg.parameters);
 }
 
 gsplines_msgs::Basis basis_to_basis_msg(const gsplines::basis::Basis &_in) {
   gsplines_msgs::Basis result;
   result.name = _in.get_name();
-  result.dim = _in.get_dim();
-  result.parameters = EIGEN_TO_STD_VECTOR(_in.get_parameters());
+  ROS_WARN_STREAM("converting base " << result.name << " into message");
+  result.dim = static_cast<int>(_in.get_dim());
+  result.parameters = EIGEN_TO_STD_VECTOR(_in.get_parameters()); // NOLINT
   return result;
 }
 
 gsplines::GSpline gspline_msg_to_gspline(const gsplines_msgs::GSpline &_msg) {
 
-  std::shared_ptr<gsplines::basis::Basis> basis =
+  const std::shared_ptr<gsplines::basis::Basis> basis =
       basis_msg_to_basis(_msg.basis);
 
-  std::pair<double, double> domain{_msg.domain_left_boundary,
-                                   _msg.domain_right_boundary};
+  const std::pair<double, double> domain{_msg.domain_left_boundary,
+                                         _msg.domain_right_boundary};
 
-  std::size_t codom_dim = _msg.codom_dim;
-  std::size_t number_of_intervals = _msg.number_of_intervals;
+  const std::size_t codom_dim = _msg.codom_dim;
+  const std::size_t number_of_intervals = _msg.number_of_intervals;
 
-  Eigen::VectorXd coefficients = Eigen::Map<const Eigen::VectorXd>(
-      _msg.coefficients.data(), _msg.coefficients.size());
-  Eigen::VectorXd interval_lengths = Eigen::Map<const Eigen::VectorXd>(
-      _msg.interval_lengths.data(), _msg.interval_lengths.size());
+  const Eigen::VectorXd coefficients = Eigen::Map<const Eigen::VectorXd>(
+      _msg.coefficients.data(), static_cast<long>(_msg.coefficients.size()));
+  const Eigen::VectorXd interval_lengths = Eigen::Map<const Eigen::VectorXd>(
+      _msg.interval_lengths.data(),
+      static_cast<long>(_msg.interval_lengths.size()));
 
-  return gsplines::GSpline(domain, codom_dim, number_of_intervals, *basis,
-                           coefficients, interval_lengths);
+  return {domain, codom_dim,    number_of_intervals,
+          *basis, coefficients, interval_lengths};
 }
 
 gsplines_msgs::GSpline gspline_to_msg(const gsplines::GSpline &_gspline) {
@@ -52,13 +85,15 @@ gsplines_msgs::GSpline gspline_to_msg(const gsplines::GSpline &_gspline) {
   result.domain_left_boundary = _gspline.get_domain().first;
   result.domain_right_boundary = _gspline.get_domain().second;
 
-  result.codom_dim = _gspline.get_codom_dim();
+  result.codom_dim = static_cast<int>(_gspline.get_codom_dim());
 
-  result.number_of_intervals = _gspline.get_number_of_intervals();
-  result.coefficients = EIGEN_TO_STD_VECTOR(_gspline.get_coefficients());
+  result.number_of_intervals =
+      static_cast<int>(_gspline.get_number_of_intervals());
+  result.coefficients =
+      EIGEN_TO_STD_VECTOR(_gspline.get_coefficients()); // NOLINT
 
   result.interval_lengths =
-      EIGEN_TO_STD_VECTOR(_gspline.get_interval_lengths());
+      EIGEN_TO_STD_VECTOR(_gspline.get_interval_lengths()); // NOLINT
 
   return result;
 }
@@ -81,26 +116,30 @@ function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
 
   trajectory_msgs::JointTrajectory result;
 
-  double t0 = _trj.get_domain().first;
-  double t1 = _trj.get_domain().second;
+  const double t0 = _trj.get_domain().first;
+  const double t1 = _trj.get_domain().second;
 
-  std::size_t number_of_segments = _trj.get_domain_length() / _step.toSec();
+  const std::size_t number_of_segments =
+      static_cast<long>(_trj.get_domain_length() / _step.toSec());
 
-  Eigen::VectorXd time_spam =
-      Eigen::VectorXd::LinSpaced(number_of_segments + 1, t0, t1);
+  Eigen::VectorXd time_spam = Eigen::VectorXd::LinSpaced(
+      static_cast<long>(number_of_segments) + 1, t0, t1);
 
-  gsplines::functions::FunctionExpression gspline_diff_1 = _trj.derivate();
-  gsplines::functions::FunctionExpression gspline_diff_2 = _trj.derivate(2);
+  const gsplines::functions::FunctionExpression gspline_diff_1 =
+      _trj.derivate();
+  const gsplines::functions::FunctionExpression gspline_diff_2 =
+      _trj.derivate(2);
 
-  Eigen::MatrixXd gspline_evaluated = _trj(time_spam);
-  Eigen::MatrixXd gspline_diff_1_evaluated = gspline_diff_1(time_spam);
-  Eigen::MatrixXd gspline_diff_2_evaluated = gspline_diff_2(time_spam);
+  const Eigen::MatrixXd gspline_evaluated = _trj(time_spam);
+  const Eigen::MatrixXd gspline_diff_1_evaluated = gspline_diff_1(time_spam);
+  const Eigen::MatrixXd gspline_diff_2_evaluated = gspline_diff_2(time_spam);
 
   for (long uici = 0; uici < gspline_evaluated.rows(); uici++) {
 
     trajectory_msgs::JointTrajectoryPoint trj_point;
 
-    for (std::size_t uicj = 0; uicj < _trj.get_codom_dim(); uicj++) {
+    for (long uicj = 0; uicj < static_cast<long>(_trj.get_codom_dim());
+         uicj++) {
       trj_point.positions.push_back(gspline_evaluated(uici, uicj));
 
       trj_point.velocities.push_back(gspline_diff_1_evaluated(uici, uicj));
@@ -115,7 +154,7 @@ function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
 
   result.joint_names = _joint_names;
 
-  result.header = _header;
+  result.header = std::move(_header);
 
   return result;
 }
@@ -127,28 +166,28 @@ trajectory_msgs::JointTrajectory gspline_to_minimal_joint_trajectory_msg(
   trajectory_msgs::JointTrajectory result;
 
   const Eigen::MatrixXd wp = _trj.get_waypoints();
-  const Eigen::VectorXd taus = _trj.get_interval_lengths();
+  const Eigen::VectorXd &taus = _trj.get_interval_lengths();
 
   for (long uici = 0; uici < wp.rows(); uici++) {
 
     trajectory_msgs::JointTrajectoryPoint trj_point;
 
-    for (std::size_t uicj = 0; uicj < _trj.get_codom_dim(); uicj++) {
+    for (long uicj = 0; uicj < static_cast<long>(_trj.get_codom_dim());
+         uicj++) {
       trj_point.positions.push_back(wp(uici, uicj));
     }
 
     if (uici == 0) {
       trj_point.time_from_start = ros::Duration(0.0);
     } else {
-      trj_point.time_from_start =
-          ros::Duration(taus.head(uici - 1).array().sum());
+      trj_point.time_from_start = ros::Duration(taus.head(uici).array().sum());
     }
     result.points.push_back(std::move(trj_point));
   }
 
   result.joint_names = _joint_names;
 
-  result.header = _header;
+  result.header = std::move(_header);
 
   return result;
 }
@@ -156,7 +195,7 @@ trajectory_msgs::JointTrajectory gspline_to_minimal_joint_trajectory_msg(
 trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msg(
     const gsplines_msgs::JointGSpline &_trj, const ros::Duration &_step) {
 
-  gsplines::GSpline trj = gspline_msg_to_gspline(_trj.gspline);
+  const gsplines::GSpline trj = gspline_msg_to_gspline(_trj.gspline);
   return function_to_joint_trajectory_msg(trj, _trj.name, _step, _trj.header);
 }
 
@@ -168,8 +207,8 @@ function_to_follow_joint_trajectory_goal(
 
   control_msgs::FollowJointTrajectoryGoal result;
 
-  result.trajectory =
-      function_to_joint_trajectory_msg(_trj, _joint_names, _step, _header);
+  result.trajectory = function_to_joint_trajectory_msg(
+      _trj, _joint_names, _step, std::move(_header));
 
   return result;
 }
@@ -260,7 +299,8 @@ trajectory_msgs::JointTrajectory gspline_msg_to_joint_trajectory_msg(
 
   gsplines::GSpline trj = gspline_msg_to_gspline(_trj);
 
-  return function_to_joint_trajectory_msg(trj, _joint_names, _step, _header);
+  return function_to_joint_trajectory_msg(trj, _joint_names, _step,
+                                          std::move(_header));
 }
 Eigen::MatrixXd get_waypoints(const trajectory_msgs::JointTrajectory &_msg) {
   std::size_t codom_dim = _msg.joint_names.size();
@@ -285,7 +325,7 @@ interval_length_vector(const trajectory_msgs::JointTrajectory &_msg) {
 
   Eigen::VectorXd result(number_of_points - 1);
 
-  for (std::size_t i = 0; i < number_of_points - 1; i++) {
+  for (long i = 0; i < static_cast<long>(number_of_points - 1); i++) {
     result(i) = _msg.points[i + 1].time_from_start.toSec() -
                 _msg.points[i].time_from_start.toSec();
   }
@@ -298,7 +338,7 @@ interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
                              const Eigen::VectorXd &_tau,
                              const gsplines::basis::Basis &_basis) {
 
-  Eigen::MatrixXd waypoints = get_waypoints(_msg);
+  const Eigen::MatrixXd waypoints = get_waypoints(_msg);
 
   return gsplines::interpolate(_tau, waypoints, _basis);
 }
@@ -307,8 +347,8 @@ gsplines::GSpline
 interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
                              const gsplines::basis::Basis &_basis) {
 
-  Eigen::MatrixXd waypoints = get_waypoints(_msg);
-  Eigen::VectorXd tau = interval_length_vector(_msg);
+  const Eigen::MatrixXd waypoints = get_waypoints(_msg);
+  const Eigen::VectorXd tau = interval_length_vector(_msg);
 
   return gsplines::interpolate(tau, waypoints, _basis);
 }
@@ -325,8 +365,7 @@ minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
 }
 
 trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
-    const Eigen::MatrixXd _waypoints,
-    const std::vector<std::string> _joint_names,
+    Eigen::MatrixXd _waypoints, std::vector<std::string> _joint_names,
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
     const ros::Duration &_step, std_msgs::Header _header) {
@@ -347,9 +386,10 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const std::optional<double> &_exec_time,   //
     std_msgs::Header _header) {
 
-  std::vector<double> velocity_bound = EIGEN_TO_STD_VECTOR(_velocity_bound);
+  std::vector<double> velocity_bound =
+      EIGEN_TO_STD_VECTOR(_velocity_bound); // NOLINT
   std::vector<double> acceleration_bound =
-      EIGEN_TO_STD_VECTOR(_acceleration_bound);
+      EIGEN_TO_STD_VECTOR(_acceleration_bound); // NOLINT
 
   return minimum_sobolev_semi_norm_joint_trajectory(
       _waypoints, _joint_names, _basis, _weights, velocity_bound,
@@ -391,7 +431,7 @@ minimum_jerk_trajectory(const Eigen::MatrixXd _waypoints,
 
   return minimum_sobolev_semi_norm_joint_trajectory(
       _waypoints, _joint_names, gsplines::basis::BasisLegendre(6), {{3, 1.0}},
-      _duration.toSec(), _step, _header);
+      _duration.toSec(), _step, std::move(_header));
 }
 
 trajectory_msgs::JointTrajectory

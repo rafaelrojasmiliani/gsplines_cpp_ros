@@ -9,14 +9,22 @@
 
 namespace gsplines_follow_trajectory {
 
+/// This is a relay/repeater node which translates FollowJointGSplineAction
+/// into a FollowJointTrajectoryAction.
 class FollowJointTrajectoryActionWrapper {
 private:
+  /// namespace where the node runs
   ros::NodeHandle nh_;
+  /// private namespace
   ros::NodeHandle nh_prv_;
 
+  /// gspline feedback message buffer
   gsplines_msgs::FollowJointGSplineFeedback feedback_;
+
+  /// gspline result message buffer
   gsplines_msgs::FollowJointGSplineResult result_;
-  std::string name_;
+
+  std::string gspline_action_name_;
   std::string fjta_name_; // follow joint trajectory action name
 
   ros::Subscriber feedback_subscriber_;
@@ -44,7 +52,7 @@ public:
   FollowJointTrajectoryActionWrapper &
   operator=(const FollowJointTrajectoryActionWrapper &) = delete;
 
-  FollowJointTrajectoryActionWrapper(const std::string &_name,
+  FollowJointTrajectoryActionWrapper(const std::string &_gspline_action_name,
                                      const std::string &_fjta_name,
                                      double _control_step);
 
