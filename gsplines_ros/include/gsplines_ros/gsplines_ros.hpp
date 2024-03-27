@@ -107,7 +107,7 @@ trajectory_msgs::JointTrajectory joint_gspline_msg_to_joint_trajectory_msg(
  */
 control_msgs::FollowJointTrajectoryGoal
 function_to_follow_joint_trajectory_goal(
-    const gsplines::functions::FunctionExpression &_trj,
+    const gsplines::functions::FunctionBase &_trj,
     const std::vector<std::string> &_joint_names, const ros::Duration &_rate,
     std_msgs::Header _header = std_msgs::Header());
 
