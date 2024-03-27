@@ -1,29 +1,43 @@
-#include <boost/format.hpp>
+
+#include <control_msgs/FollowJointTrajectoryAction.h>
+#include <control_msgs/FollowJointTrajectoryFeedback.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
+#include <control_msgs/FollowJointTrajectoryResult.h>
+
 #include <gsplines_follow_trajectory/follow_joint_trajectory_action_wrapper.hpp>
+
+#include <gsplines_msgs/FollowJointGSplineAction.h>
+#include <gsplines_msgs/FollowJointGSplineFeedback.h>
+#include <gsplines_msgs/FollowJointGSplineGoal.h>
 #include <gsplines_msgs/FollowJointGSplineResult.h>
+
 #include <gsplines_ros/gsplines_ros.hpp>
 
+#include <ros/duration.h>
+#include <ros/node_handle.h>
+
+#include <memory>
+#include <string>
+
 namespace gsplines_follow_trajectory {
+
 const std::string LOGNAME("GSplineFollowJointTrajectoryActionWrapper");
 
 FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
     const std::string &_gspline_action_name, const std::string &_fjta_name,
     double _control_step)
-    : nh_(), nh_prv_("~"), gspline_action_name_(_gspline_action_name),
+    : nh_prv_("~"), gspline_action_name_(_gspline_action_name),
       fjta_name_(_fjta_name), control_step_(_control_step),
-      action_server_(std::make_unique<actionlib::SimpleActionServer<
+      action_server_(std::make_unique<actionlib::SimpleActionServer< // NOLINT
                          gsplines_msgs::FollowJointGSplineAction>>(
           nh_, _fjta_name + "/" + gspline_action_name_, false)),
-      action_client_(std::make_unique<actionlib::SimpleActionClient<
+      action_client_(std::make_unique<actionlib::SimpleActionClient< // NOLINT
                          control_msgs::FollowJointTrajectoryAction>>(
           nh_, _fjta_name + "/follow_joint_trajectory", true)) {
 
-  action_server_->registerPreemptCallback(boost::bind(
-      &FollowJointTrajectoryActionWrapper::prehemption_action, this));
+  action_server_->registerPreemptCallback([this] { prehemption_action(); });
 
-  action_server_->registerGoalCallback(
-      boost::bind(&FollowJointTrajectoryActionWrapper::action_callback, this));
+  action_server_->registerGoalCallback([this] { action_callback(); });
 
   std::string absolute_namespace = nh_.getNamespace();
   if (absolute_namespace !=
@@ -31,16 +45,17 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
     absolute_namespace += "/"; // Ensure there is a trailing slash.
   }
 
-  ROS_INFO_STREAM_NAMED(LOGNAME, "Waiting for action "
+  ROS_INFO_STREAM_NAMED(LOGNAME, "Waiting for action " // NOLINT
                                      << absolute_namespace + _fjta_name +
                                             "/follow_joint_trajectory");
 
   if (action_client_->waitForServer(ros::Duration(60.0))) {
-    ROS_INFO("Starting action server %s", gspline_action_name_.c_str());
+    ROS_INFO("Starting action server %s",   // NOLINT
+             gspline_action_name_.c_str()); // NOLINT
     action_server_->start();
-    ROS_INFO_NAMED(LOGNAME, "Action found.");
+    ROS_INFO_NAMED(LOGNAME, "Action found."); // NOLINT
   } else {
-    ROS_ERROR_STREAM_NAMED(LOGNAME,
+    ROS_ERROR_STREAM_NAMED(LOGNAME, // NOLINT
                            "Could not find action "
                                << _fjta_name + "/follow_joint_trajectory");
   }
@@ -50,14 +65,13 @@ void FollowJointTrajectoryActionWrapper::action_callback() {
   // ros::Rate(1).sleep();
   // action_server_->registerGoalCallback();
 
-  ROS_INFO("callback");
   const gsplines_msgs::FollowJointGSplineGoalConstPtr goal =
       action_server_->acceptNewGoal();
 
   desired_motion_start_time_ = goal->gspline.header.stamp;
 
   if (not goal) {
-    ROS_ERROR("No goal available");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "No goal available"); // NOLINT
     return;
   }
   forward_goal(goal);
@@ -72,15 +86,18 @@ void FollowJointTrajectoryActionWrapper::forward_goal(
 
   action_client_->sendGoal(
       goal_to_forward,
-      boost::bind(&FollowJointTrajectoryActionWrapper::done_action, this, _1,
-                  _2),
-      boost::bind(&FollowJointTrajectoryActionWrapper::active_action, this),
-      boost::bind(&FollowJointTrajectoryActionWrapper::feedback_action, this,
-                  _1));
+      [this](auto &&PH1, auto &&PH2) {
+        done_action(std::forward<decltype(PH1)>(PH1),
+                    std::forward<decltype(PH2)>(PH2));
+      },
+      [this] { active_action(); },
+      [this](auto &&PH1) {
+        feedback_action(std::forward<decltype(PH1)>(PH1));
+      });
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
-    const gsplines_msgs::FollowJointGSplineFeedbackConstPtr _msg) {
+    const gsplines_msgs::FollowJointGSplineFeedbackConstPtr &_msg) {
   action_server_->publishFeedback(_msg);
 }
 
@@ -90,20 +107,22 @@ void FollowJointTrajectoryActionWrapper::prehemption_action() {
 }
 
 void FollowJointTrajectoryActionWrapper::done_action(
-    const actionlib::SimpleClientGoalState &state,
+    const actionlib::SimpleClientGoalState &state, // NOLINT
     const control_msgs::FollowJointTrajectoryResultConstPtr &_result) {
 
   gsplines_msgs::FollowJointGSplineResult result = gsplines_ros::
       follow_joint_trajectory_result_to_follow_joint_gspline_result(*_result);
 
-  char text_pos_error[100];
-  char text_time_error[100];
-  std::sprintf(text_pos_error, "%+14.7e", instant_position_error_inf_norm_);
+  char text_pos_error[100];                       // NOLINT
+  std::sprintf(text_pos_error, "%+14.7e",         // NOLINT
+               instant_position_error_inf_norm_); // NOLINT
 
   switch (state.state_) {
   case actionlib::SimpleClientGoalState::ABORTED:
-    action_server_->setAborted(result, state.text_ + "(aborted err = " +
-                                           std::string(text_pos_error) + ")");
+    action_server_->setAborted(
+        result, state.text_ +
+                    "(aborted err = " + std::string(text_pos_error) + // NOLINT
+                    ")");                                             // NOLINT
     break;
   case actionlib::SimpleClientGoalState::REJECTED:
     action_server_->setAborted(result, state.text_ + "(rejected)");
@@ -120,9 +139,6 @@ void FollowJointTrajectoryActionWrapper::done_action(
   default:
     break;
   }
-  /*
-  action_server_->setAborted();
-  */
 }
 
 void FollowJointTrajectoryActionWrapper::active_action() {}
@@ -135,8 +151,9 @@ void FollowJointTrajectoryActionWrapper::feedback_action(
 
   action_server_->publishFeedback(result);
   instant_position_error_inf_norm_ =
-      Eigen::Map<const Eigen::ArrayXd>(_msg->error.positions.data(),
-                                       _msg->error.positions.size())
+      Eigen::Map<const Eigen::ArrayXd>(
+          _msg->error.positions.data(),
+          static_cast<long>(_msg->error.positions.size()))
           .abs()
           .maxCoeff();
 
