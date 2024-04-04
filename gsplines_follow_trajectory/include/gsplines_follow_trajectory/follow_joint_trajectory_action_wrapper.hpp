@@ -26,12 +26,13 @@ namespace gsplines_follow_trajectory {
 /// This is a relay/repeater node which translates FollowJointGSplineAction
 /// into a FollowJointTrajectoryAction.
 class FollowJointTrajectoryActionWrapper {
-private:
+protected:
   /// namespace where the node runs
   ros::NodeHandle nh_;
   /// private namespace
   ros::NodeHandle nh_prv_;
 
+private:
   /// gspline feedback message buffer
   gsplines_msgs::FollowJointGSplineFeedback feedback_;
 
@@ -45,7 +46,6 @@ private:
   ros::Publisher feedback_repeater_;
 
   double control_step_;
-  std::string target_action_ns_;
   double instant_position_error_inf_norm_ = 0.0;
 
 protected:
@@ -73,8 +73,8 @@ public:
    * @param _control_step time step of the discretization of the gspline when
    * transformed into a follow joint trajectory
    */
-  FollowJointTrajectoryActionWrapper(const std::string &_gspline_action_name,
-                                     const std::string &_fjta_name,
+  FollowJointTrajectoryActionWrapper(std::string _gspline_action_name,
+                                     std::string _fjta_name,
                                      double _control_step);
 
   /// Default destructor
@@ -86,7 +86,7 @@ public:
    *
    * @param goal desired gspline goal
    */
-  void forward_goal(const gsplines_msgs::FollowJointGSplineGoalConstPtr &goal);
+  void forward_goal(const gsplines_msgs::FollowJointGSplineGoal &goal);
 
   /**
    * @brief Blocking. Transform a gspline goal into a follow joint trajectory

@@ -18,22 +18,27 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace gsplines_follow_trajectory {
 
 const std::string LOGNAME("GSplineFollowJointTrajectoryActionWrapper");
 
 FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
-    const std::string &_gspline_action_name, const std::string &_fjta_name,
+    std::string _gspline_action_name, std::string _fjta_name,
     double _control_step)
-    : nh_prv_("~"), gspline_action_name_(_gspline_action_name),
-      fjta_name_(_fjta_name), control_step_(_control_step),
+    : nh_prv_("~"), // init private namespace
+      gspline_action_name_(
+          std::move(_gspline_action_name)), // gspline action name
+      fjta_name_(std::move(_fjta_name)),    // FollowJointTrajectoryAction name
+      control_step_(_control_step),         // discretization of the gsplie to
+                                            // FollowJointTrajectoryGoal
       action_server_(std::make_unique<actionlib::SimpleActionServer< // NOLINT
                          gsplines_msgs::FollowJointGSplineAction>>(
-          nh_, _fjta_name + "/" + gspline_action_name_, false)),
+          nh_, fjta_name_ + "/" + gspline_action_name_, false)),
       action_client_(std::make_unique<actionlib::SimpleActionClient< // NOLINT
                          control_msgs::FollowJointTrajectoryAction>>(
-          nh_, _fjta_name + "/follow_joint_trajectory", true)) {
+          nh_, fjta_name_ + "/follow_joint_trajectory", true)) {
 
   action_server_->registerPreemptCallback([this] { prehemption_action(); });
 
@@ -46,7 +51,7 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
   }
 
   ROS_INFO_STREAM_NAMED(LOGNAME, "Waiting for action " // NOLINT
-                                     << absolute_namespace + _fjta_name +
+                                     << absolute_namespace + fjta_name_ +
                                             "/follow_joint_trajectory");
 
   if (action_client_->waitForServer(ros::Duration(60.0))) {
@@ -62,27 +67,24 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
 }
 
 void FollowJointTrajectoryActionWrapper::action_callback() {
-  // ros::Rate(1).sleep();
-  // action_server_->registerGoalCallback();
 
-  const gsplines_msgs::FollowJointGSplineGoalConstPtr goal =
-      action_server_->acceptNewGoal();
+  const auto &goal = action_server_->acceptNewGoal();
 
-  desired_motion_start_time_ = goal->gspline.header.stamp;
-
-  if (not goal) {
+  if (!goal) {
     ROS_ERROR_STREAM_NAMED(LOGNAME, "No goal available"); // NOLINT
+    action_server_->setAborted();
     return;
   }
-  forward_goal(goal);
+  desired_motion_start_time_ = goal->gspline.header.stamp;
+  forward_goal(*goal);
 }
 
 void FollowJointTrajectoryActionWrapper::forward_goal(
-    const gsplines_msgs::FollowJointGSplineGoalConstPtr &_goal) {
+    const gsplines_msgs::FollowJointGSplineGoal &_goal) {
 
   control_msgs::FollowJointTrajectoryGoal goal_to_forward =
       gsplines_ros::follow_joint_gspline_goal_to_follow_joint_trajectory_goal(
-          *_goal, ros::Duration(control_step_));
+          _goal, ros::Duration(control_step_));
 
   action_client_->sendGoal(
       goal_to_forward,
@@ -94,6 +96,8 @@ void FollowJointTrajectoryActionWrapper::forward_goal(
       [this](auto &&PH1) {
         feedback_action(std::forward<decltype(PH1)>(PH1));
       });
+
+  ROS_INFO_STREAM_NAMED(LOGNAME, "Goal Forwarded");
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
