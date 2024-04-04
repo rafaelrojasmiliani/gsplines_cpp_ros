@@ -108,10 +108,10 @@ public:
       const gsplines_msgs::FollowJointGSplineFeedbackConstPtr &_msg);
 
   /**
-   * @brief Action executed on prehemption request
+   * @brief Action executed on preemption request
    *
    */
-  virtual void prehemption_action();
+  virtual void preemption_action();
 
   /**
    * @brief Action executed when the task is concluded

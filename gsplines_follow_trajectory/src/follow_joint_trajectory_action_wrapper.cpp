@@ -40,7 +40,7 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
                          control_msgs::FollowJointTrajectoryAction>>(
           nh_, fjta_name_ + "/follow_joint_trajectory", true)) {
 
-  action_server_->registerPreemptCallback([this] { prehemption_action(); });
+  action_server_->registerPreemptCallback([this] { preemption_action(); });
 
   action_server_->registerGoalCallback([this] { action_callback(); });
 
@@ -105,7 +105,7 @@ void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
   action_server_->publishFeedback(_msg);
 }
 
-void FollowJointTrajectoryActionWrapper::prehemption_action() {
+void FollowJointTrajectoryActionWrapper::preemption_action() {
 
   action_client_->cancelGoal();
 }
