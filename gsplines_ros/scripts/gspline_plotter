@@ -6,75 +6,72 @@ from gsplines_msgs.msg import JointGSpline
 from gsplines_msgs.msg import FollowJointGSplineActionGoal
 
 import rospy
+import rostopic
+import threading
 from trajectory_msgs.msg import JointTrajectory
 from gsplines_ros import joint_gspline_msg_to_gspline
 from matplotlib import pyplot as plt
 import numpy as np
 import matplotlib
+import gsplines
+import gsplines.plot
+import matplotlib.animation as animation
 
 
-def mypause(interval):
-    """ Workarround to prevent the plot window to steal the desktop focus
-    https://stackoverflow.com/questions/45729092/make-interactive-matplotlib-window-not-pop-to-front-on-each-update-windows-7/45734500#45734500
-    """
-    backend = plt.rcParams['backend']
-    if backend in matplotlib.rcsetup.interactive_bk:
-        figure_manager = matplotlib._pylab_helpers.Gcf.get_active()
-        if figure_manager is not None:
-            canvas = figure_manager.canvas
-            if canvas.figure.stale:
-                canvas.draw()
-            canvas.start_event_loop(interval)
-            return
+class Animation:
+    def __init__(self, _codom_dim: int, _up_to_deriv: int, _step: float):
 
+        self.lock_ = threading.Lock()
 
-def show_piecewisefunction(_figure, _gspline, _up_to_deriv=3,
-                           _dt=0.1, _title='', _names: list = None):
-    """
-        plot piecewise function
-    """
-    if _names is None:
-        _names = ['cordinate {:d}'.format(i+1)
-                  for i in range(_gspline.get_codom_dim())]
-    else:
-        assert len(_names) == _gspline.get_codom_dim()
-    dim = _gspline.get_codom_dim()
-    gridspec = _figure.add_gridspec(_up_to_deriv + 1, dim)
-    plot_axes = np.array(
-        [[_figure.add_subplot(gridspec[i, j]) for j in range(dim)]
-         for i in range(_up_to_deriv + 1)])
+        self.up_to_deriv_ = _up_to_deriv
+        self.codom_dim_ = _codom_dim
 
-    if dim == 1:
-        plot_axes = np.array([[plot_axes[i]] for i in range(_up_to_deriv + 1)])
-    _figure.suptitle(_title)
-    time_spam = np.arange(0.0, _gspline.get_exec_time()+_dt, _dt)
+        self.step_ = _step
 
-    for i in range(0, _up_to_deriv + 1):
-        current_trj = _gspline.deriv(i)
-        current_trj_evaluated = current_trj(time_spam)
-        for j in range(0, dim):
-            plot_axes[i, j].plot(time_spam, current_trj_evaluated[:, j])
-            plot_axes[i, j].grid()
-            if i == 0:
-                plot_axes[i, j].set_title(
-                    '{:s} derivative {:d}'.format(_names[j], i), fontsize=8)
+        self.fig_, self.axis_ = plt.subplots(
+            _up_to_deriv+1, _codom_dim)
 
-            if hasattr(_gspline, 'get_domain_breakpoints'):
-                for breack_point in _gspline.get_domain_breakpoints():
-                    plot_axes[i, j].axvline(
-                        breack_point, alpha=0.1, color='red')
+        self.curve_container_ = [gsplines.plot.CurveVsTime(
+            _codom_dim) for _ in range(0, _up_to_deriv+1)]
 
-    plt.subplots_adjust(
-        left=0.025,
-        bottom=0.05,
-        right=0.975,
-        top=0.95,
-        wspace=0.25,
-        hspace=0.15)
+        for i, cvt in enumerate(self.curve_container_):
+            cvt.associate_axis(self.axis_[i, :])
+
+        self.curve_ = None
+
+    def plot_curve(self, _q: gsplines.GSpline):
+
+        with self.lock_:
+            self.curve_ = _q
+
+    def plt_func(self, _):
+        """Function for for adding data to axis.
+
+        Args:
+            _ : Dummy variable that is required for matplotlib animation.
+
+        Returns:
+            Axes object for matplotlib
+        """
+        with self.lock_:
+            if self.curve_ is not None:
+                curve = self.curve_
+                for cvt in self.curve_container_:
+                    cvt.update(curve, self.step_)
+                    curve = curve.deriv()
+                for i in range(0, self.up_to_deriv_+1):
+                    for j in range(0, self.codom_dim_):
+                        gsplines.plot.fix_to_lines(self.axis_[i, j])
+
+    def _plt(self):
+        """Function for initializing and showing matplotlib animation."""
+        self.ani = animation.FuncAnimation(
+            self.fig_, self.plt_func, interval=1)
+        plt.show()
 
 
 class Node:
-    """ Generic node class"""
+    """ Node class, that plots a gspline"""
 
     def __init__(self):
         rospy.init_node('gsplines_plotter')
@@ -88,37 +85,46 @@ class Node:
         for key, value in self.params.items():
             self.params[key] = rospy.get_param('~'+key, value)
 
-        self.subs_ = rospy.Subscriber(
-            self.params['input_topic'], JointGSpline, self.callback_msg)
+        self.ani = Animation(7, 3, self.params['plot_step'])
 
-        self.subs_ = rospy.Subscriber(
-            "follow_joint_gspline/goal", FollowJointGSplineActionGoal,
-            self.callback_goal)
+        topic_type, _, _ = rostopic.get_topic_class(self.params['input_topic'])
 
-        self.figure_ = plt.figure()
-        plt.show()
+        if topic_type is JointGSpline:
+            self.subs_ = rospy.Subscriber(
+                self.params['input_topic'], JointGSpline, self.callback_msg)
+            rospy.loginfo('listeing gspline to topic \'' +
+                          self.params['input_topic']+'\'' +
+                          'of type JointGSpline')
+        elif topic_type is FollowJointGSplineActionGoal:
+            self.subs_ = rospy.Subscriber(
+                self.params['input_topic'], FollowJointGSplineActionGoal,
+                self.callback_goal)
+            rospy.loginfo('listeing gspline to topic \'' +
+                          self.params['input_topic']+'\'' +
+                          'of type FollowJointGSplineActionGoal')
+        else:
+            rospy.logerr("Cannot plot type " + topic_type.__str__)
 
     def plot(self, _gspline):
         """ plot the gspline"""
 
-        plt.clf()
-
-        show_piecewisefunction(self.figure_, _gspline,
-                               self.params['plot_up_to_derivative'],
-                               self.params['plot_step'],
-                               self.params['title'])
-        mypause(0.001)
-
     def callback_msg(self, _msg: JointGSpline):
         """ plot received message"""
-        trj = joint_gspline_msg_to_gspline(_msg)
 
-        self.plot(trj)
+        q = joint_gspline_msg_to_gspline(_msg)
+        self.ani.plot_curve(q)
 
     def callback_goal(self, _msg: FollowJointGSplineActionGoal):
         """ plot received message"""
         self.callback_msg(_msg.goal.gspline)
 
 
+def main():
+    node = Node()
+    thread = threading.Thread(target=rospy.spin, daemon=True)
+    thread.start()
+    node.ani._plt()
+
+
 if __name__ == "__main__":
-    tr = Node()
+    main()
