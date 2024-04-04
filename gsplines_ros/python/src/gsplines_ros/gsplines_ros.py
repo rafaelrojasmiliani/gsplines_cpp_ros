@@ -5,6 +5,7 @@ Message conversions for gsplines
 import rospy
 
 import gsplines
+import gsplines.plot
 from gsplines.basis import get_basis
 from trajectory_msgs.msg import JointTrajectoryPoint
 from trajectory_msgs.msg import JointTrajectory
@@ -70,7 +71,8 @@ def gspline_msg_to_gspline(_msg: GSpline) -> gsplines.GSpline:
 def joint_gspline_msg_to_gspline(_msg: JointGSpline) -> gsplines.GSpline:
     """ Joint GSpline message to GSpline """
 
-    basis = get_basis(_msg.basis.name, _msg.basis.dim, _msg.basis.parameters)
+    basis = get_basis(_msg.gspline.basis.name,
+                      _msg.gspline.basis.dim, _msg.gspline.basis.parameters)
 
     domain = (_msg.gspline.domain_left_boundary,
               _msg.gspline.domain_right_boundary)
