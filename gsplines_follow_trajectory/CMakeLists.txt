@@ -6,6 +6,7 @@ find_package(
   COMPONENTS actionlib
              actionlib_msgs
              control_msgs
+             dynamic_reconfigure
              geometry_msgs
              gsplines_ros
              gsplines_msgs
@@ -19,6 +20,9 @@ find_package(
 
 find_package(Eigen3 REQUIRED)
 
+generate_dynamic_reconfigure_options(
+  "cfg/FollowJointTrajectoryActionWrapperDynamicReconfigure.cfg")
+
 catkin_package(
   INCLUDE_DIRS
   include/
@@ -28,6 +32,7 @@ catkin_package(
   actionlib
   actionlib_msgs
   control_msgs
+  dynamic_reconfigure
   geometry_msgs
   gsplines_ros
   gsplines_msgs
@@ -44,6 +49,8 @@ add_library(gsplines_follow_trajectory
 
 target_link_libraries(gsplines_follow_trajectory ${catkin_LIBRARIES}
                       ${Eigen3_LIBRARIES})
+
+add_dependencies(gsplines_follow_trajectory ${PROJECT_NAME}_gencfg)
 
 add_executable(follow_joint_trajectory_wrapper
                src/follow_joint_trajectory_action_wrapper_node.cpp)

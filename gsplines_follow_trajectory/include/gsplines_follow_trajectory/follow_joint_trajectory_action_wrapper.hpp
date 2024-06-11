@@ -45,7 +45,6 @@ private:
   ros::Subscriber feedback_subscriber_;
   ros::Publisher feedback_repeater_;
 
-  double control_step_;
   double instant_position_error_inf_norm_ = 0.0;
 
 protected:
@@ -78,7 +77,7 @@ public:
                                      double _control_step);
 
   /// Default destructor
-  virtual ~FollowJointTrajectoryActionWrapper() = default;
+  virtual ~FollowJointTrajectoryActionWrapper();
 
   /**
    * @brief Non blocking. Transform a gspline goal into a follow joint
@@ -145,7 +144,7 @@ public:
    *
    * @return the control step.
    */
-  [[nodiscard]] double get_control_step() const { return control_step_; }
+  [[nodiscard]] double get_control_step();
 
   /**
    * @brief Get the  time when the goal trajectory should start.
@@ -154,6 +153,10 @@ public:
   [[nodiscard]] const ros::Time &get_desired_motion_start_time() const {
     return desired_motion_start_time_;
   }
+
+protected:
+  class Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace gsplines_follow_trajectory

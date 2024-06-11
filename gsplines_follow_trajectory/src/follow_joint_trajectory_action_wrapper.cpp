@@ -11,10 +11,13 @@
 #include <gsplines_msgs/FollowJointGSplineGoal.h>
 #include <gsplines_msgs/FollowJointGSplineResult.h>
 
+#include <gsplines_follow_trajectory/FollowJointTrajectoryActionWrapperDynamicReconfigureConfig.h>
 #include <gsplines_ros/gsplines_ros.hpp>
 
 #include <ros/duration.h>
 #include <ros/node_handle.h>
+
+#include <dynamic_reconfigure/server.h>
 
 #include <memory>
 #include <string>
@@ -24,6 +27,35 @@ namespace gsplines_follow_trajectory {
 
 const std::string LOGNAME("GSplineFollowJointTrajectoryActionWrapper");
 
+class FollowJointTrajectoryActionWrapper::Impl {
+public:
+  double control_step = 0.01;
+  using ConfigType = FollowJointTrajectoryActionWrapperDynamicReconfigureConfig;
+
+  dynamic_reconfigure::Server<ConfigType> server_;
+
+  ros::NodeHandle nh_prv_{"~"};
+
+  Impl(double _control_step)
+      : server_(ros::NodeHandle("~")), control_step(_control_step) {
+
+    server_.setCallback([this](ConfigType &_cfg, uint32_t _level) {
+      this->set_parameters(_cfg, _level);
+    });
+
+    ConfigType config;
+    config.control_step = _control_step;
+
+    server_.updateConfig(config);
+  }
+
+  void set_parameters(ConfigType &_cfg, uint32_t level) {
+    (void)level;
+
+    control_step = _cfg.control_step;
+  }
+};
+
 FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
     std::string _gspline_action_name, std::string _fjta_name,
     double _control_step)
@@ -31,14 +63,14 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
       gspline_action_name_(
           std::move(_gspline_action_name)), // gspline action name
       fjta_name_(std::move(_fjta_name)),    // FollowJointTrajectoryAction name
-      control_step_(_control_step),         // discretization of the gsplie to
                                             // FollowJointTrajectoryGoal
       action_server_(std::make_unique<actionlib::SimpleActionServer< // NOLINT
                          gsplines_msgs::FollowJointGSplineAction>>(
           nh_, fjta_name_ + "/" + gspline_action_name_, false)),
       action_client_(std::make_unique<actionlib::SimpleActionClient< // NOLINT
                          control_msgs::FollowJointTrajectoryAction>>(
-          nh_, fjta_name_ + "/follow_joint_trajectory", true)) {
+          nh_, fjta_name_ + "/follow_joint_trajectory", true)),
+      m_impl(new Impl(_control_step)) {
 
   action_server_->registerPreemptCallback([this] { preemption_action(); });
 
@@ -66,6 +98,13 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
   }
 }
 
+double FollowJointTrajectoryActionWrapper::get_control_step() {
+  return m_impl->control_step;
+}
+
+FollowJointTrajectoryActionWrapper::~FollowJointTrajectoryActionWrapper() =
+    default;
+
 void FollowJointTrajectoryActionWrapper::action_callback() {
 
   const auto &goal = action_server_->acceptNewGoal();
@@ -84,7 +123,7 @@ void FollowJointTrajectoryActionWrapper::forward_goal(
 
   control_msgs::FollowJointTrajectoryGoal goal_to_forward =
       gsplines_ros::follow_joint_gspline_goal_to_follow_joint_trajectory_goal(
-          _goal, ros::Duration(control_step_));
+          _goal, ros::Duration(m_impl->control_step));
 
   action_client_->sendGoal(
       goal_to_forward,
