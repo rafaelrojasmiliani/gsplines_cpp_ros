@@ -1,0 +1,19 @@
+<library path="src">
+    <class name="JointGSplinePlot"
+           type="rqt_joint_gspline_plot.plugin.JointGSplinePlot"
+           base_class_type="rqt_gui_py::Plugin">
+        <description>A plugin visualizing the JointGSpline message in 2D
+        plot.</description>
+        <qtgui>
+            <group>
+                <label>Visualization</label>
+                <icon type="theme">folder</icon>
+                <statustip>Plugins related to visualization.</statustip>
+            </group>
+            <label>JointGSplinePlot</label>
+            <icon type="theme">utilities-system-monitor</icon>
+            <statustip>A plugin visualizing the JointGSpline message in 2D
+            plot.</statustip>
+        </qtgui>
+    </class>
+</library>
