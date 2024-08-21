@@ -11,13 +11,15 @@ from roslib.message import get_message_class
 from rqt_py_common import topic_helpers
 from trajectory_msgs.msg import JointTrajectory
 from control_msgs.msg import FollowJointTrajectoryActionGoal
+from gsplines_msgs.msg import JointGSpline
+import gsplines_ros
 from moveit_msgs.msg import DisplayTrajectory
 import numpy as np
 from .plot_widget import PlotWidget
 
 
 class MainWidget(QWidget):
-    draw_curves = Signal(object, object)
+    draw_curves = Signal(object, object, object)
 
     def __init__(self):
         super(MainWidget, self).__init__()
@@ -63,7 +65,8 @@ class MainWidget(QWidget):
         for (name, type) in topic_list:
             if type in ['trajectory_msgs/JointTrajectory',
                         'control_msgs/FollowJointTrajectoryActionGoal',
-                        'moveit_msgs/DisplayTrajectory']:
+                        'moveit_msgs/DisplayTrajectory',
+                        'gsplines_msgs/JointGSpline']:
                 self.topic_name_class_map[name] = get_message_class(type)
                 self.topic_combox.addItem(name)
 
@@ -90,7 +93,8 @@ class MainWidget(QWidget):
             item.setText(0, joint_name)
             item.setCheckState(0, Qt.Unchecked)
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            for traj_name in ['position', 'velocity', 'acceleration', 'effort']:
+            for traj_name in ['position', 'velocity',
+                              'acceleration', 'effort']:
                 sub_item = QTreeWidgetItem(item)
                 sub_item.setText(0, traj_name)
                 sub_item.setCheckState(0, Qt.Unchecked)
@@ -107,18 +111,27 @@ class MainWidget(QWidget):
         if msg_class == JointTrajectory:
             msg = JointTrajectory().deserialize(anymsg._buff)
         elif msg_class == FollowJointTrajectoryActionGoal:
-            msg = FollowJointTrajectoryActionGoal().deserialize(anymsg._buff).goal.trajectory
+            msg = FollowJointTrajectoryActionGoal().deserialize(
+                anymsg._buff).goal.trajectory
         elif msg_class == DisplayTrajectory:
-            if DisplayTrajectory().deserialize(anymsg._buff).trajectory.__len__() > 0:
+            if DisplayTrajectory().deserialize(
+                    anymsg._buff).trajectory.__len__() > 0:
                 msg = DisplayTrajectory().deserialize(
                     anymsg._buff).trajectory.pop().joint_trajectory
             else:
                 rospy.logwarn(
-                    "Received planned trajectory has no waypoints in it. Nothing to plot!")
+                    ("Received planned trajectory has no waypoints in it."
+                     " Nothing to plot!"))
                 return
+        elif msg_class == JointGSpline:
+            print('-------------')
+            msg = JointGSpline().deserialize(anymsg._buff)
+            msg = gsplines_ros.joint_gspline_msg_to_joint_trajectory_msg(
+                msg, rospy.Duration(0.01))
         else:
             rospy.logerr('Wrong message type %s' % msg_class)
             return
+        print(msg)
         self.time = np.array([0.0] * len(msg.points))
         (self.dis, self.vel, self.acc, self.eff) = ({}, {}, {}, {})
         for joint_name in msg.joint_names:
@@ -152,21 +165,29 @@ class MainWidget(QWidget):
         curve_names = []
         data = {}
         data_list = [self.dis, self.vel, self.acc, self.eff]
+        desired_plots = {}
+
         traj_names = ['position', 'velocity', 'acceleration', 'effort']
         # Create curve name and data from checked items
         for i in range(self.select_tree.topLevelItemCount()):
             joint_item = self.select_tree.topLevelItem(i)
+            desired_plots[joint_item.text(0)] = {}
             for n in range(len(traj_names)):
                 item = joint_item.child(n)
                 if item.checkState(0):
+
                     joint_name = joint_item.text(0)
                     curve_name = joint_name + ' ' + traj_names[n]
                     curve_names.append(curve_name)
                     data[curve_name] = (self.time, data_list[n][joint_name])
-        self.draw_curves.emit(curve_names, data)
+                    desired_plots[joint_item.text(0)][traj_names[n]] = (
+                        self.time, data_list[n][joint_name])
+        self.draw_curves.emit(desired_plots, curve_names, data)
 
     def update_checkbox(self, item, column):
+        self.select_tree.blockSignals(True)
         self.recursive_check(item)
+        self.select_tree.blockSignals(False)
         self.plot_graph()
 
     def recursive_check(self, item):
