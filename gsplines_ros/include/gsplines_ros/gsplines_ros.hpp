@@ -166,19 +166,21 @@ gsplines::GSpline
 interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
                              const gsplines::basis::Basis &_basis);
 
-gsplines::GSpline
+std::optional<gsplines::GSpline>
 minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
                           const gsplines::basis::Basis &_basis,
                           std::vector<std::pair<std::size_t, double>> _weights,
                           double _exec_time);
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     Eigen::MatrixXd _waypoints, std::vector<std::string> _joint_names,
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
     const ros::Duration &_step, std_msgs::Header _header = std_msgs::Header());
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     const Eigen::MatrixXd &_waypoints,
     const std::vector<std::string> &_joint_names,
     const gsplines::basis::Basis &_basis,
@@ -188,7 +190,8 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const std::optional<double> &_exec_time = std::nullopt,
     std_msgs::Header _header = std_msgs::Header());
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     const Eigen::MatrixXd &_waypoints,
     const std::vector<std::string> &_joint_names,
     const gsplines::basis::Basis &_basis,
@@ -198,14 +201,14 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
     const std::optional<double> &_exec_time = std::nullopt,
     std_msgs::Header _header = std_msgs::Header());
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const ros::Duration &_duration,
                         const ros::Duration &_step,
                         std_msgs::Header _header = std_msgs::Header());
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const Eigen::VectorXd &_velocity_bound,
@@ -213,7 +216,7 @@ minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const ros::Duration &_step,
                         std_msgs::Header _header = std_msgs::Header());
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const std::vector<double> &_velocity_bound,

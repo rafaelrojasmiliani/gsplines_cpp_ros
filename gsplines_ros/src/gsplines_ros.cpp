@@ -353,7 +353,7 @@ interpolate_joint_trajectory(const trajectory_msgs::JointTrajectory &_msg,
   return gsplines::interpolate(tau, waypoints, _basis);
 }
 
-gsplines::GSpline
+std::optional<gsplines::GSpline>
 minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
                           const gsplines::basis::Basis &_basis,
                           std::vector<std::pair<std::size_t, double>> _weights,
@@ -364,19 +364,24 @@ minimum_sobolev_semi_norm(const trajectory_msgs::JointTrajectory &_msg,
                                                       _weights, _exec_time);
 }
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     Eigen::MatrixXd _waypoints, std::vector<std::string> _joint_names,
     const gsplines::basis::Basis &_basis,
     std::vector<std::pair<std::size_t, double>> _weights, double _exec_time,
     const ros::Duration &_step, std_msgs::Header _header) {
 
-  gsplines::GSpline trj = gsplines::optimization::optimal_sobolev_norm(
-      _waypoints, _basis, _weights, _exec_time);
-  return function_to_joint_trajectory_msg(trj, _joint_names, _step,
-                                          std::move(_header));
+  auto trj = gsplines::optimization::optimal_sobolev_norm(_waypoints, _basis,
+                                                          _weights, _exec_time);
+  if (trj.has_value()) {
+    return function_to_joint_trajectory_msg(trj.value(), _joint_names, _step,
+                                            std::move(_header));
+  }
+  return std::nullopt;
 }
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     const Eigen::MatrixXd &_waypoints,
     const std::vector<std::string> &_joint_names,
     const gsplines::basis::Basis &_basis,
@@ -397,7 +402,8 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
       acceleration_bound, _step, _exec_time, std::move(_header));
 }
 
-trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
+std::optional<trajectory_msgs::JointTrajectory>
+minimum_sobolev_semi_norm_joint_trajectory(
     const Eigen::MatrixXd &_waypoints,
     const std::vector<std::string> &_joint_names,
     const gsplines::basis::Basis &_basis,
@@ -410,14 +416,18 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
 
   trajectory_msgs::JointTrajectory result;
 
-  gsplines::GSpline trj = gsplines::optimization::optimal_sobolev_norm(
+  auto trj = gsplines::optimization::optimal_sobolev_norm(
       _waypoints, _basis, _weights,
       _exec_time.has_value() ? _exec_time.value()
                              : static_cast<double>(_waypoints.rows()) - 1.0);
 
+  if (!trj.has_value()) {
+    return std::nullopt;
+  }
   auto trj2 =
-      trj.linear_scaling_new_execution_time_max_velocity_max_acceleration(
-          _velocity_bound, _acceleration_bound, _step.toSec());
+      trj.value()
+          .linear_scaling_new_execution_time_max_velocity_max_acceleration(
+              _velocity_bound, _acceleration_bound, _step.toSec());
 
   auto gspline_ = gspline_to_msg(trj2);
   result = gspline_msg_to_joint_trajectory_msg(gspline_, _joint_names, _step,
@@ -425,7 +435,7 @@ trajectory_msgs::JointTrajectory minimum_sobolev_semi_norm_joint_trajectory(
   return result;
 }
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const ros::Duration &_duration,
@@ -436,7 +446,7 @@ minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
       _duration.toSec(), _step, std::move(_header));
 }
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const Eigen::VectorXd &_velocity_bound,
@@ -449,7 +459,7 @@ minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
       std::move(_header));
 }
 
-trajectory_msgs::JointTrajectory
+std::optional<trajectory_msgs::JointTrajectory>
 minimum_jerk_trajectory(const Eigen::MatrixXd &_waypoints,
                         const std::vector<std::string> &_joint_names,
                         const std::vector<double> &_velocity_bound,
@@ -499,7 +509,8 @@ bool operator==(const trajectory_msgs::JointTrajectory &_msg,
     if (not gsplines::tools::approx_equal(
             gspline_evaluated.row(uici),
             Eigen::Map<const Eigen::Matrix<double, 1, Eigen::Dynamic>>(
-                trj_point.positions.data(), trj_point.positions.size()),
+                trj_point.positions.data(),
+                static_cast<long>(trj_point.positions.size())),
             1.0e-7)) {
       return false;
     }
