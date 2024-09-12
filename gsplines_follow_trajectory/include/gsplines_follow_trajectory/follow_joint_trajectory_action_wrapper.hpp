@@ -47,6 +47,11 @@ private:
 
   double instant_position_error_inf_norm_ = 0.0;
 
+  ///  publisher of the forwarded gspline
+  ros::Publisher gspline_publisher_;
+  ///  publisher of the forwarded trajectory
+  ros::Publisher trajectory_publisher_;
+
 protected:
   std::unique_ptr<
       actionlib::SimpleActionServer<gsplines_msgs::FollowJointGSplineAction>>

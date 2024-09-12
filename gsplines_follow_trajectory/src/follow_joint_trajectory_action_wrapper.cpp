@@ -96,6 +96,10 @@ FollowJointTrajectoryActionWrapper::FollowJointTrajectoryActionWrapper(
                            "Could not find action "
                                << _fjta_name + "/follow_joint_trajectory");
   }
+  gspline_publisher_ =
+      nh_prv_.advertise<gsplines_msgs::JointGSpline>("received_gspline", 1000);
+  trajectory_publisher_ = nh_prv_.advertise<trajectory_msgs::JointTrajectory>(
+      "forwarded_trajectory", 1000);
 }
 
 double FollowJointTrajectoryActionWrapper::get_control_step() {
@@ -137,6 +141,8 @@ void FollowJointTrajectoryActionWrapper::forward_goal(
       });
 
   ROS_INFO_STREAM_NAMED(LOGNAME, "Goal Forwarded");
+  gspline_publisher_.publish(_goal.gspline);
+  trajectory_publisher_.publish(goal_to_forward.trajectory);
 }
 
 void FollowJointTrajectoryActionWrapper::feedback_repeater_method(
