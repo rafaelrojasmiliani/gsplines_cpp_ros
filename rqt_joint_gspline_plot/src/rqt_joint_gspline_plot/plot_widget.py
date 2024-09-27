@@ -53,12 +53,18 @@ class PlotWidget(QWidget):
         traj_names = ['position', 'velocity', 'acceleration', 'effort']
         for col, (jointName, itemsToPlot) in enumerate(desired_plots.items()):
             for key, curve in itemsToPlot.items():
+                currentRow = traj_names.index(key)
                 ax = self.canvas.figure.add_subplot(
                     rows,
-                    cols, cols*traj_names.index(key)
+                    cols, cols*currentRow
                     + col + 1)
                 ax.grid()
                 ax.plot(curve[0], curve[1])
+                if currentRow == 0:
+                    ax.set_title(curve_names[4*col].replace('position', ''))
+                if col == 0:
+                    ax.set_ylabel(traj_names[currentRow].capitalize())
+
         t1 = time.time()
 
         print('\n --- ------------------\n', t1 - t0)
