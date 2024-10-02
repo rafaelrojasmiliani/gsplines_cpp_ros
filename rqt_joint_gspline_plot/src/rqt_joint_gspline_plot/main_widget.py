@@ -131,7 +131,6 @@ class MainWidget(QWidget):
         else:
             rospy.logerr('Wrong message type %s' % msg_class)
             return
-        print(msg)
         self.time = np.array([0.0] * len(msg.points))
         (self.dis, self.vel, self.acc, self.eff) = ({}, {}, {}, {})
         for joint_name in msg.joint_names:
