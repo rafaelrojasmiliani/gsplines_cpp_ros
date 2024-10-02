@@ -1,6 +1,9 @@
 Header header
 gsplines_msgs/JointGSpline gspline
+gsplines_msgs/JointGSpline original_gspline
 float64 ti
 float64 alpha
 string bound_type
-string robot_model
+string robot_description
+string pinocchio_model
+int32 nglp
