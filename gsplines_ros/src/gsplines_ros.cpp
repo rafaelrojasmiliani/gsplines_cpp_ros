@@ -119,9 +119,19 @@ function_to_joint_trajectory_msg(const gsplines::functions::FunctionBase &_trj,
   const double t0 = _trj.get_domain().first;
   const double t1 = _trj.get_domain().second;
 
-  const std::size_t number_of_segments =
-      static_cast<long>(_trj.get_domain_length() / _step.toSec());
-
+  /// Use a lambda to initialize number_of_segments to ensure
+  /// that this ins constant in this context.
+  const std::size_t number_of_segments = [&]() {
+    // Get the number of segmens required to have the desired time step
+    auto res = static_cast<long>(_trj.get_domain_length() / _step.toSec());
+    // If the time step is larger tan the time domain of the trajectory,
+    // then return 1 to ensure that the result has at least two points: initial
+    // and final.
+    if (res == 0) {
+      return 1L;
+    }
+    return res;
+  }();
   Eigen::VectorXd time_spam = Eigen::VectorXd::LinSpaced(
       static_cast<long>(number_of_segments) + 1, t0, t1);
 
